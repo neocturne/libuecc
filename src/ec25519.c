@@ -340,7 +340,7 @@ static void recip(unsigned int out[32], const unsigned int z[32]) {
 	/* 2^255 - 21 */ mult(out, t1, z11);
 }
 
-void inflate(ec_25519_work *out, const ec_public_key_256 *in) {
+void ec_25519_inflate(ec_25519_work *out, const ec_public_key_256 *in) {
 	int i;
 	unsigned int X2[32], d_X2[32] = {0x04, 0x6d, 0x07} /* 486660 */, a_X2[32] = {0x08, 0x6d, 0x07} /* 486664 */, _1_a_X2[32], d_X2_a_X2[32], Y[32], Yt[32];
 
@@ -362,7 +362,7 @@ void inflate(ec_25519_work *out, const ec_public_key_256 *in) {
 	select(out->Y, Y, Yt, in->p[31] >> 7);
 }
 
-void deflate(ec_public_key_256 *out, ec_25519_work *in) {
+void ec_25519_deflate(ec_public_key_256 *out, ec_25519_work *in) {
 	unsigned int x[32], y[32], z[32];
 	int i;
 
@@ -382,7 +382,7 @@ void deflate(ec_public_key_256 *out, ec_25519_work *in) {
 
 static const ec_25519_work infty = {{0}, {0}, {1}};
 
-void ec25519_double(ec_25519_work *out, const ec_25519_work *in) {
+void ec_25519_double(ec_25519_work *out, const ec_25519_work *in) {
 	unsigned int A[32], B[32], C[32], D[32], E[32], U[32], t0[32], t1[32], t2[32], t3[32], t4[32], t5[32];
 
 	square(A, in->X);
@@ -403,7 +403,7 @@ void ec25519_double(ec_25519_work *out, const ec_25519_work *in) {
 	selectw(out, &infty, out, check_zero(out->X)*check_zero(out->Y));
 }
 
-void ec25519_add(ec_25519_work *out, const ec_25519_work *in1, const ec_25519_work *in2) {
+void ec_25519_add(ec_25519_work *out, const ec_25519_work *in1, const ec_25519_work *in2) {
 	unsigned int A[32], B[32], C[32], D[32], E[32], H[32], I[32], t0[32], t1[32], t2[32], t3[32], t4[32], t5[32], t6[32], t7[32], t8[32];
 
 	mult(A, in1->Z, in2->Z);
@@ -429,7 +429,7 @@ void ec25519_add(ec_25519_work *out, const ec_25519_work *in1, const ec_25519_wo
 	selectw(out, in2, out, check_zero(t2));
 }
 
-void ec25519_scalarmult(ec_25519_work *out, const ec_secret_key_256 *n, const ec_25519_work *base) {
+void ec_25519_scalarmult(ec_25519_work *out, const ec_secret_key_256 *n, const ec_25519_work *base) {
 	ec_25519_work Q2, Q2p, cur;
 	int i, b, pos;
 
@@ -443,8 +443,8 @@ void ec25519_scalarmult(ec_25519_work *out, const ec_secret_key_256 *n, const ec
 		b = n->s[pos / 8] >> (pos & 7);
 		b &= 1;
 
-		ec25519_double(&Q2, &cur);
-		ec25519_add(&Q2p, &Q2, base);
+		ec_25519_double(&Q2, &cur);
+		ec_25519_add(&Q2p, &Q2, base);
 		selectw(&cur, &Q2, &Q2p, b);
 	}
 
