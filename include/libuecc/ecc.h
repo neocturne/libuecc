@@ -27,12 +27,6 @@
 #ifndef _LIBUECC_ECC_H_
 #define _LIBUECC_ECC_H_
 
-typedef struct _ec_public_key_xyz_256_work {
-	unsigned int X[32];
-	unsigned int Y[32];
-	unsigned int Z[32];
-} ec_public_key_xyz_256_work;
-
 typedef struct _ec_public_key_256 {
 	unsigned char p[32];
 } ec_public_key_256;
@@ -41,16 +35,19 @@ typedef struct _ec_secret_key_256 {
 	unsigned char s[32];
 } ec_secret_key_256;
 
-typedef ec_public_key_xyz_256_work ec_25519_work;
+typedef struct _ec_25519_work {
+	unsigned int X[32];
+	unsigned int Y[32];
+	unsigned int Z[32];
+} ec_25519_work;
 
 
-void ec_25519_inflate(ec_25519_work *out, const ec_public_key_256 *in);
-void ec_25519_deflate(ec_public_key_256 *out, ec_25519_work *in);
+void ec_25519_load(ec_25519_work *out, const ec_public_key_256 *in);
+void ec_25519_store(ec_public_key_256 *out, const ec_25519_work *in);
 
 void ec_25519_add(ec_25519_work *out, const ec_25519_work *in1, const ec_25519_work *in2);
-
 void ec_25519_double(ec_25519_work *out, const ec_25519_work *in);
-
 void ec_25519_scalarmult(ec_25519_work *out, const ec_secret_key_256 *n, const ec_25519_work *base);
+void ec_25519_scalarmult_base(ec_25519_work *out, const ec_secret_key_256 *n);
 
 #endif /* _LIBUECC_ECC_H_ */

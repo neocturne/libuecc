@@ -25,7 +25,7 @@
 */
 
 /*
-  EC group operations for Twisted Edwards Curve ax^2 + y^2 + 1 + dx^2y^2 with
+  EC group operations for Twisted Edwards Curve ax^2 + y^2 = 1 + dx^2y^2 with
     a = 486664
     d = 486660
   on prime field p = 2^255 - 19.
@@ -340,7 +340,7 @@ static void recip(unsigned int out[32], const unsigned int z[32]) {
 	/* 2^255 - 21 */ mult(out, t1, z11);
 }
 
-void ec_25519_inflate(ec_25519_work *out, const ec_public_key_256 *in) {
+void ec_25519_load(ec_25519_work *out, const ec_public_key_256 *in) {
 	int i;
 	unsigned int X2[32], d_X2[32] = {0x04, 0x6d, 0x07} /* 486660 */, a_X2[32] = {0x08, 0x6d, 0x07} /* 486664 */, _1_a_X2[32], d_X2_a_X2[32], Y[32], Yt[32];
 
@@ -359,10 +359,10 @@ void ec_25519_inflate(ec_25519_work *out, const ec_public_key_256 *in) {
 	square_root(Y, d_X2_a_X2);
 	sub(Yt, zero, Y);
 
-	select(out->Y, Y, Yt, in->p[31] >> 7);
+	select(out->Y, Y, Yt, (in->p[31] >> 7) ^ (Y[0] & 1));
 }
 
-void ec_25519_deflate(ec_public_key_256 *out, ec_25519_work *in) {
+void ec_25519_store(ec_public_key_256 *out, const ec_25519_work *in) {
 	unsigned int x[32], y[32], z[32];
 	int i;
 
@@ -453,4 +453,20 @@ void ec_25519_scalarmult(ec_25519_work *out, const ec_secret_key_256 *n, const e
 		out->Y[i] = cur.Y[i];
 		out->Z[i] = cur.Z[i];
 	}
+}
+
+static const ec_25519_work default_base = {
+	{0x51, 0x89, 0xfa, 0x46, 0xa0, 0xc0, 0x8b, 0x3d,
+         0x30, 0x60, 0xf1, 0x7d, 0x2a, 0xec, 0xcd, 0xf3,
+	 0x24, 0x50, 0x96, 0x62, 0x21, 0xfc, 0xe6, 0x18,
+	 0x14, 0xd6, 0x11, 0xf8, 0x11, 0x91, 0xa1, 0x03},
+	{0xf3, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+	 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+	 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+	 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x5f},
+	{1}
+};
+
+void ec_25519_scalarmult_base(ec_25519_work *out, const ec_secret_key_256 *n) {
+	ec_25519_scalarmult(out, n, &default_base);
 }
