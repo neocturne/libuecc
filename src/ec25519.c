@@ -194,15 +194,16 @@ static const unsigned int rho_s[32] = {
 };
 
 static const unsigned int zero[32] = {0};
-static const unsigned int minus1[32] = {
-	0xec, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
-	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
-	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
-	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x7f
-};
 
 static void square_root(unsigned int out[32], const unsigned int z[32]) {
-	/* raise z to the (2^252-2)th power */
+	static const unsigned int minus1[32] = {
+		0xec, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+		0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+		0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+		0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x7f
+	};
+
+	/* raise z to power (2^252-2), check if power (2^253-5) equals -1 */
 
 	unsigned int z2[32];
 	unsigned int z9[32];
@@ -214,7 +215,8 @@ static void square_root(unsigned int out[32], const unsigned int z[32]) {
 	unsigned int z2_100_0[32];
 	unsigned int t0[32];
 	unsigned int t1[32];
-	unsigned int rt_sq[32];
+	unsigned int z2_252_1[32];
+	unsigned int z2_252_1_rho_s[32];
 	int i;
 
 	/* 2 */ square(z2, z);
@@ -264,14 +266,15 @@ static void square_root(unsigned int out[32], const unsigned int z[32]) {
 
 	/* 2^251 - 2^1 */ square(t1, t0);
 	/* 2^252 - 2^2 */ square(t0, t1);
+	/* 2^252 - 2^1 */ mult(z2_252_1, t0, z2);
 
-	/* 2^252 - 2 */ mult(t1, t0, z2);
+	/* 2^253 - 2^3 */ square(t1, t0);
+	/* 2^253 - 6 */ mult(t0, t1, z2);
+	/* 2^253 - 5 */ mult(t1, t0, z);
 
-	mult(t0, t1, rho_s);
+	mult(z2_252_1_rho_s, z2_252_1, rho_s);
 
-	square(rt_sq, t1);
-
-	select(out, t0, t1, check_equal(rt_sq, minus1));
+	select(out, z2_252_1_rho_s, z2_252_1, check_equal(t1, minus1));
 }
 
 static void recip(unsigned int out[32], const unsigned int z[32]) {
