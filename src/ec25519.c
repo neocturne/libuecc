@@ -342,7 +342,8 @@ static void recip(unsigned int out[32], const unsigned int z[32]) {
 
 void ecc_25519_load(ecc_25519_work *out, const ecc_public_key_256 *in) {
 	int i;
-	unsigned int X2[32], d_X2[32] = {0x04, 0x6d, 0x07} /* 486660 */, a_X2[32] = {0x08, 0x6d, 0x07} /* 486664 */, _1_a_X2[32], d_X2_a_X2[32], Y[32], Yt[32];
+	unsigned int X2[32], _1_a_X2[32], d_X2_a_X2[32], Y[32], Yt[32];
+	unsigned int d_X2[32] = {0x04, 0x6d, 0x07} /* 486660 */, a_X2[32] = {0x08, 0x6d, 0x07} /* 486664 */;
 
 	for (i = 0; i < 32; i++) {
 		out->X[i] = in->p[i];
