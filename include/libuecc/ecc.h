@@ -45,13 +45,16 @@ typedef struct _ecc_25519_work {
 void ecc_25519_load(ecc_25519_work *out, const ecc_public_key_256 *in);
 void ecc_25519_store(ecc_public_key_256 *out, const ecc_25519_work *in);
 
-void ecc_25519_add_secret(ecc_secret_key_256 *out, const ecc_secret_key_256 *in1, const ecc_secret_key_256 *in2);
-void ecc_25519_sub_secret(ecc_secret_key_256 *out, const ecc_secret_key_256 *in1, const ecc_secret_key_256 *in2);
-void ecc_25519_mult_secret(ecc_secret_key_256 *out, const ecc_secret_key_256 *in1, const ecc_secret_key_256 *in2);
-
+int ecc_25519_is_infinity(const ecc_25519_work *in);
 void ecc_25519_add(ecc_25519_work *out, const ecc_25519_work *in1, const ecc_25519_work *in2);
 void ecc_25519_double(ecc_25519_work *out, const ecc_25519_work *in);
 void ecc_25519_scalarmult(ecc_25519_work *out, const ecc_secret_key_256 *n, const ecc_25519_work *base);
 void ecc_25519_scalarmult_base(ecc_25519_work *out, const ecc_secret_key_256 *n);
+
+int ecc_25519_secret_is_zero(const ecc_secret_key_256 *in);
+void ecc_25519_secret_add(ecc_secret_key_256 *out, const ecc_secret_key_256 *in1, const ecc_secret_key_256 *in2);
+void ecc_25519_secret_sub(ecc_secret_key_256 *out, const ecc_secret_key_256 *in1, const ecc_secret_key_256 *in2);
+void ecc_25519_secret_reduce(ecc_secret_key_256 *out, const ecc_secret_key_256 *in);
+void ecc_25519_secret_mult(ecc_secret_key_256 *out, const ecc_secret_key_256 *in1, const ecc_secret_key_256 *in2);
 
 #endif /* _LIBUECC_ECC_H_ */

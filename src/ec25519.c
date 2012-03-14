@@ -135,18 +135,6 @@ static void square(unsigned int out[32], const unsigned int a[32]) {
 	squeeze(out);
 }
 
-static int check_zero(const unsigned int x[32]) {
-	unsigned int differentbits = 0;
-	int i;
-
-	for (i = 0; i < 32; i++) {
-		differentbits |= (x[i] & 0xffff);
-		differentbits |= (x[i] >> 16);
-	}
-
-	return (1-(1 & ((differentbits - 1) >> 16)));
-}
-
 static int check_equal(const unsigned int x[32], const unsigned int y[32]) {
 	unsigned int differentbits = 0;
 	int i;
@@ -156,7 +144,19 @@ static int check_equal(const unsigned int x[32], const unsigned int y[32]) {
 		differentbits |= ((x[i] ^ y[i]) >> 16);
 	}
 
-	return (1-(1 & ((differentbits - 1) >> 16)));
+	return (1 & ((differentbits - 1) >> 16));
+}
+
+static int check_zero(const unsigned int x[32]) {
+	static const unsigned int zero[32] = {0};
+	static const unsigned int p[32] = {
+		0xed, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+		0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+		0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+		0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x7f
+	};
+
+	return (check_equal(x, zero) | check_equal(x, p));
 }
 
 static void selectw(ecc_25519_work *out, const ecc_25519_work *r, const ecc_25519_work *s, unsigned int b) {
@@ -275,7 +275,7 @@ static void square_root(unsigned int out[32], const unsigned int z[32]) {
 
 	mult(z2_252_1_rho_s, z2_252_1, rho_s);
 
-	select(out, z2_252_1_rho_s, z2_252_1, check_equal(t1, minus1));
+	select(out, z2_252_1, z2_252_1_rho_s, check_equal(t1, minus1));
 }
 
 static void recip(unsigned int out[32], const unsigned int z[32]) {
@@ -389,6 +389,10 @@ void ecc_25519_store(ecc_public_key_256 *out, const ecc_25519_work *in) {
 
 static const ecc_25519_work infty = {{0}, {0}, {1}};
 
+int ecc_25519_is_infinity(const ecc_25519_work *in) {
+	return (check_zero(in->X)|check_zero(in->Y));
+}
+
 void ecc_25519_double(ecc_25519_work *out, const ecc_25519_work *in) {
 	unsigned int A[32], B[32], C[32], D[32], E[32], U[32], t0[32], t1[32], t2[32], t3[32], t4[32], t5[32];
 
@@ -407,7 +411,7 @@ void ecc_25519_double(ecc_25519_work *out, const ecc_25519_work *in) {
 	sub(t5, C, t4);
 	mult(out->Y, E, t5);
 	mult(out->Z, D, E);
-	selectw(out, &infty, out, check_zero(out->X)*check_zero(out->Y));
+	selectw(out, out, &infty, ecc_25519_is_infinity(out));
 }
 
 void ecc_25519_add(ecc_25519_work *out, const ecc_25519_work *in1, const ecc_25519_work *in2) {
@@ -432,8 +436,8 @@ void ecc_25519_add(ecc_25519_work *out, const ecc_25519_work *in1, const ecc_255
 	mult(out->Y, t7, I);
 	mult(t8, H, I);
 	mult(out->Z, A, t8);
-	selectw(out, in1, out, check_zero(t3));
-	selectw(out, in2, out, check_zero(t2));
+	selectw(out, out, in1, check_zero(t3));
+	selectw(out, out, in2, check_zero(t2));
 }
 
 void ecc_25519_scalarmult(ecc_25519_work *out, const ecc_secret_key_256 *n, const ecc_25519_work *base) {

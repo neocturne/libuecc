@@ -56,7 +56,20 @@ static void select(unsigned char out[32], const unsigned char r[32], const unsig
 	}
 }
 
-void ecc_25519_add_secret(ecc_secret_key_256 *out, const ecc_secret_key_256 *in1, const ecc_secret_key_256 *in2) {
+int ecc_25519_secret_is_zero(const ecc_secret_key_256 *in) {
+	int i;
+	ecc_secret_key_256 r;
+	unsigned int bits;
+
+	ecc_25519_secret_reduce(&r, in);
+
+	for (i = 0; i < 32; i++)
+		bits |= r.s[i];
+
+	return (((bits-1)>>8) & 1);
+}
+
+void ecc_25519_secret_add(ecc_secret_key_256 *out, const ecc_secret_key_256 *in1, const ecc_secret_key_256 *in2) {
 	unsigned int j;
 	int u1, u2, u3;
 	unsigned char out1[32], out2[32], out3[32];
@@ -81,7 +94,7 @@ void ecc_25519_add_secret(ecc_secret_key_256 *out, const ecc_secret_key_256 *in1
 	select(out->s, out->s, out3, ((u1 >> 8) & (u2 >> 8)) & 1);
 }
 
-void ecc_25519_sub_secret(ecc_secret_key_256 *out, const ecc_secret_key_256 *in1, const ecc_secret_key_256 *in2) {
+void ecc_25519_secret_sub(ecc_secret_key_256 *out, const ecc_secret_key_256 *in1, const ecc_secret_key_256 *in2) {
 	unsigned int j;
 	int u1, u2, u3;
 	unsigned char out1[32], out2[32], out3[32];
@@ -128,6 +141,15 @@ static void reduce(unsigned char a[32]) {
 	select(a, out1, out2, IS_NEGATIVE(u1));
 }
 
+void ecc_25519_secret_reduce(ecc_secret_key_256 *out, const ecc_secret_key_256 *in) {
+	int i;
+
+	for (i = 0; i < 32; i++)
+		out->s[i] = in->s[i];
+
+	reduce(out->s);
+}
+
 /* Montgomery modular multiplication algorithm */
 static void montgomery(unsigned char out[32], const unsigned char a[32], const unsigned char b[32]) {
 	unsigned int a_i;
@@ -157,7 +179,7 @@ static void montgomery(unsigned char out[32], const unsigned char a[32], const u
 }
 
 
-void ecc_25519_mult_secret(ecc_secret_key_256 *out, const ecc_secret_key_256 *in1, const ecc_secret_key_256 *in2) {
+void ecc_25519_secret_mult(ecc_secret_key_256 *out, const ecc_secret_key_256 *in1, const ecc_secret_key_256 *in2) {
 	/* 2^512 mod p */
 	static const unsigned char C[32] = {
 		0x01, 0x0f, 0x9c, 0x44, 0xe3, 0x11, 0x06, 0xa4,
