@@ -34,6 +34,7 @@
 
 
 #define IS_NEGATIVE(n) ((int)((((unsigned)n) >> (8*sizeof(n)-1))&1))
+#define ASR(n,s) (((n) >> s)|(IS_NEGATIVE(n)*((unsigned)-1) << (8*sizeof(n)-s)))
 
 
 static const unsigned char q[32] = {
@@ -71,58 +72,36 @@ int ecc_25519_secret_is_zero(const ecc_secret_key_256 *in) {
 
 void ecc_25519_secret_add(ecc_secret_key_256 *out, const ecc_secret_key_256 *in1, const ecc_secret_key_256 *in2) {
 	unsigned int j;
-	int u1, u2, u3;
-	unsigned char out1[32], out2[32], out3[32];
+	unsigned int u;
+	int nq = 1 - (in1->s[31]>>4) - (in2->s[31]>>4);
 
-	u1 = u2 = u3 = 0;
-	for (j = 0; j < 31; ++j) {
-		u1 += in1->s[j] + in2->s[j];
-		u2 += in1->s[j] + in2->s[j] - 8*q[j];
-		u3 += in1->s[j] + in2->s[j] - 16*q[j];
+	u = 0;
+	for (j = 0; j < 32; ++j) {
+		u += in1->s[j] + in2->s[j] + nq*q[j];
 
-		out1[j] = u1; out2[j] = u2; out3[j] = u3;
-		u1 = (u1+IS_NEGATIVE(u1))/256 - IS_NEGATIVE(u1);
-		u2 = (u2+IS_NEGATIVE(u2))/256 - IS_NEGATIVE(u2);
-		u3 = (u3+IS_NEGATIVE(u3))/256 - IS_NEGATIVE(u3);
+		out->s[j] = u;
+		u = ASR(u, 8);
 	}
-	u1 += in1->s[31] + in2->s[31];
-	u2 += in1->s[31] + in2->s[31] - 8*q[31];
-	u3 += in1->s[31] + in2->s[31] - 16*q[31];
-	out1[31] = u1; out2[31] = u2; out3[31] = u3;
-
-	select(out->s, out1, out2, (u1 >> 8) & 1);
-	select(out->s, out->s, out3, ((u1 >> 8) & (u2 >> 8)) & 1);
 }
 
 void ecc_25519_secret_sub(ecc_secret_key_256 *out, const ecc_secret_key_256 *in1, const ecc_secret_key_256 *in2) {
 	unsigned int j;
-	int u1, u2, u3;
-	unsigned char out1[32], out2[32], out3[32];
+	unsigned int u;
+	int nq = 8 - (in1->s[31]>>4) + (in2->s[31]>>4);
 
-	u1 = u2 = u3 = 0;
-	for (j = 0; j < 31; ++j) {
-		u1 += in1->s[j] - in2->s[j] + 16*q[j];
-		u2 += in1->s[j] - in2->s[j] + 8*q[j];
-		u3 += in1->s[j] - in2->s[j];
+	u = 0;
+	for (j = 0; j < 32; ++j) {
+		u += in1->s[j] - in2->s[j] + nq*q[j];
 
-		out1[j] = u1; out2[j] = u2; out3[j] = u3;
-		u1 = (u1+IS_NEGATIVE(u1))/256 - IS_NEGATIVE(u1);
-		u2 = (u2+IS_NEGATIVE(u2))/256 - IS_NEGATIVE(u2);
-		u3 = (u3+IS_NEGATIVE(u3))/256 - IS_NEGATIVE(u3);
+		out->s[j] = u;
+		u = ASR(u, 8);
 	}
-	u1 += in1->s[31] - in2->s[31] + 16*q[31];
-	u2 += in1->s[31] - in2->s[31] + 8*q[31];
-	u3 += in1->s[31] - in2->s[31];
-	out1[31] = u1; out2[31] = u2; out3[31] = u3;
-
-	select(out->s, out1, out2, (u1 >> 8) & 1);
-	select(out->s, out->s, out3, ((u1 >> 8) & (u2 >> 8)) & 1);
 }
 
 static void reduce(unsigned char a[32]) {
 	unsigned int j;
-	int nq = a[31] >> 4;
-	int u1, u2;
+	unsigned int nq = a[31] >> 4;
+	unsigned int u1, u2;
 	unsigned char out1[32], out2[32];
 
 	u1 = u2 = 0;
@@ -131,8 +110,8 @@ static void reduce(unsigned char a[32]) {
 		u2 += a[j] - (nq-1)*q[j];
 
 		out1[j] = u1; out2[j] = u2;
-		u1 = (u1+IS_NEGATIVE(u1))/256 - IS_NEGATIVE(u1);
-		u2 = (u2+IS_NEGATIVE(u2))/256 - IS_NEGATIVE(u2);
+		u1 = ASR(u1, 8);
+		u2 = ASR(u2, 8);
 	}
 	u1 += a[31] - nq*q[31];
 	u2 += a[31] - (nq-1)*q[31];
