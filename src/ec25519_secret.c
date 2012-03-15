@@ -25,8 +25,8 @@
 */
 
 /*
-  Simple finite field operations on the prime field F_p for
-  p = 2^252 + 27742317777372353535851937790883648493, which
+  Simple finite field operations on the prime field F_q for
+  q = 2^252 + 27742317777372353535851937790883648493, which
   is the order of the base point used for ec25519
 */
 
@@ -152,35 +152,31 @@ void ecc_25519_secret_reduce(ecc_secret_key_256 *out, const ecc_secret_key_256 *
 
 /* Montgomery modular multiplication algorithm */
 static void montgomery(unsigned char out[32], const unsigned char a[32], const unsigned char b[32]) {
-	unsigned int a_i;
 	unsigned int i, j;
-	unsigned int r0;
+	unsigned int nq;
 	unsigned int u;
 
 	for (i = 0; i < 32; i++)
 		out[i] = 0;
 
-	for (i = 0; i < 256; i++) {
-		a_i = a[i / 8] >> (i & 7);
-		a_i &= 1;
-
-		u = out[0] + a_i*b[0];
-		r0 = u & 1;
-		u += r0 * q[0];
+	for (i = 0; i < 32; i++) {
+		u = out[0] + a[i]*b[0];
+		nq = (u*27) & 255;
+		u += nq*q[0];
 
 		for (j = 1; j < 32; ++j) {
-			u += (out[j] + a_i*b[j] + r0*q[j]) << 8;
-			out[j-1] = (u >> 1) & 255;
+			u += (out[j] + a[i]*b[j] + nq*q[j]) << 8;
 			u >>= 8;
+			out[j-1] = u;
 		}
 
-		out[31] = u >> 1;
+		out[31] = u >> 8;
 	}
 }
 
 
 void ecc_25519_secret_mult(ecc_secret_key_256 *out, const ecc_secret_key_256 *in1, const ecc_secret_key_256 *in2) {
-	/* 2^512 mod p */
+	/* 2^512 mod q */
 	static const unsigned char C[32] = {
 		0x01, 0x0f, 0x9c, 0x44, 0xe3, 0x11, 0x06, 0xa4,
 		0x47, 0x93, 0x85, 0x68, 0xa7, 0x1b, 0x0e, 0xd0,
