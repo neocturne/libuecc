@@ -45,7 +45,7 @@ typedef struct _ecc_25519_work {
 void ecc_25519_load(ecc_25519_work *out, const ecc_public_key_256 *in);
 void ecc_25519_store(ecc_public_key_256 *out, const ecc_25519_work *in);
 
-int ecc_25519_is_infinity(const ecc_25519_work *in);
+int ecc_25519_is_identity(const ecc_25519_work *in);
 void ecc_25519_add(ecc_25519_work *out, const ecc_25519_work *in1, const ecc_25519_work *in2);
 void ecc_25519_double(ecc_25519_work *out, const ecc_25519_work *in);
 void ecc_25519_scalarmult(ecc_25519_work *out, const ecc_secret_key_256 *n, const ecc_25519_work *base);

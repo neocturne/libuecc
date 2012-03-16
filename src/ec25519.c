@@ -387,10 +387,10 @@ void ecc_25519_store(ecc_public_key_256 *out, const ecc_25519_work *in) {
 	out->p[31] |= (y[0] << 7);
 }
 
-static const ecc_25519_work infty = {{0}, {0}, {1}};
+static const ecc_25519_work id = {{1}, {0}, {0}};
 
-int ecc_25519_is_infinity(const ecc_25519_work *in) {
-	return (check_zero(in->X)|check_zero(in->Y));
+int ecc_25519_is_identity(const ecc_25519_work *in) {
+	return (check_zero(in->X)|check_zero(in->Y)|check_zero(in->Z));
 }
 
 void ecc_25519_double(ecc_25519_work *out, const ecc_25519_work *in) {
@@ -411,11 +411,12 @@ void ecc_25519_double(ecc_25519_work *out, const ecc_25519_work *in) {
 	sub(t5, C, t4);
 	mult(out->Y, E, t5);
 	mult(out->Z, D, E);
-	selectw(out, out, &infty, ecc_25519_is_infinity(out));
+	selectw(out, out, &id, ecc_25519_is_identity(out));
 }
 
 void ecc_25519_add(ecc_25519_work *out, const ecc_25519_work *in1, const ecc_25519_work *in2) {
 	unsigned int A[32], B[32], C[32], D[32], E[32], H[32], I[32], t0[32], t1[32], t2[32], t3[32], t4[32], t5[32], t6[32], t7[32], t8[32];
+	int id1 = ecc_25519_is_identity(in1), id2 = ecc_25519_is_identity(in2);
 
 	mult(A, in1->Z, in2->Z);
 	square(t0, A);
@@ -436,8 +437,8 @@ void ecc_25519_add(ecc_25519_work *out, const ecc_25519_work *in1, const ecc_255
 	mult(out->Y, t7, I);
 	mult(t8, H, I);
 	mult(out->Z, A, t8);
-	selectw(out, out, in1, check_zero(t3));
-	selectw(out, out, in2, check_zero(t2));
+	selectw(out, out, in1, id2);
+	selectw(out, out, in2, id1);
 }
 
 void ecc_25519_scalarmult(ecc_25519_work *out, const ecc_secret_key_256 *n, const ecc_25519_work *base) {
