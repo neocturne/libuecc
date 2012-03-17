@@ -39,6 +39,7 @@ typedef struct _ecc_25519_work {
 	unsigned int X[32];
 	unsigned int Y[32];
 	unsigned int Z[32];
+	unsigned int T[32];
 } ecc_25519_work;
 
 

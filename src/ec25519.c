@@ -33,7 +33,7 @@
   The curve is equivalent to the Montgomery Curve used in D. J. Bernstein's
   Curve25519 Diffie-Hellman algorithm
 
-  See http://hyperelliptic.org/EFD/g1p/auto-twisted-inverted.html for add and
+  See http://hyperelliptic.org/EFD/g1p/auto-twisted-extended.html for add and
   double operations
 */
 
@@ -174,6 +174,9 @@ static void selectw(ecc_25519_work *out, const ecc_25519_work *r, const ecc_2551
 
 		t = bminus1 & (r->Z[j] ^ s->Z[j]);
 		out->Z[j] = s->Z[j] ^ t;
+
+		t = bminus1 & (r->T[j] ^ s->T[j]);
+		out->T[j] = s->T[j] ^ t;
 	}
 }
 
@@ -346,10 +349,11 @@ static void recip(unsigned int out[32], const unsigned int z[32]) {
 
 void ecc_25519_load(ecc_25519_work *out, const ecc_public_key_256 *in) {
 	static const unsigned int zero[32] = {0};
+	static const unsigned int one[32] = {1};
 
 	int i;
-	unsigned int X2[32], _1_a_X2[32], d_X2_a_X2[32], Y[32], Yt[32];
-	unsigned int d_X2[32] = {0x04, 0x6d, 0x07} /* 486660 */, a_X2[32] = {0x08, 0x6d, 0x07} /* 486664 */;
+	unsigned int X2[32] /* X^2 */, aX2[32] /* aX^2 */, dX2[32] /* dX^2 */, _1_aX2[32] /* 1-aX^2 */, _1_dX2[32] /* 1-aX^2 */;
+	unsigned int _1_1_dX2[32]  /* 1/(1-aX^2) */, Y2[32] /* Y^2 */, Y[32], Yt[32];
 
 	for (i = 0; i < 32; i++) {
 		out->X[i] = in->p[i];
@@ -359,14 +363,18 @@ void ecc_25519_load(ecc_25519_work *out, const ecc_public_key_256 *in) {
 	out->X[31] &= 0x7f;
 
 	square(X2, out->X);
-	sub(d_X2, d_X2, X2);
-	sub(a_X2, a_X2, X2);
-	recip(_1_a_X2, a_X2);
-	mult(d_X2_a_X2, d_X2, _1_a_X2);
-	square_root(Y, d_X2_a_X2);
+	mult_int(aX2, 486664, X2);
+	mult_int(dX2, 486660, X2);
+	sub(_1_aX2, one, aX2);
+	sub(_1_dX2, one, dX2);
+	recip(_1_1_dX2, _1_dX2);
+	mult(Y2, _1_aX2, _1_1_dX2);
+	square_root(Y, Y2);
 	sub(Yt, zero, Y);
 
 	select(out->Y, Y, Yt, (in->p[31] >> 7) ^ (Y[0] & 1));
+
+	mult(out->T, out->X, out->Y);
 }
 
 void ecc_25519_store(ecc_public_key_256 *out, const ecc_25519_work *in) {
@@ -387,69 +395,65 @@ void ecc_25519_store(ecc_public_key_256 *out, const ecc_25519_work *in) {
 	out->p[31] |= (y[0] << 7);
 }
 
-static const ecc_25519_work id = {{1}, {0}, {0}};
+static const ecc_25519_work id = {{0}, {1}, {1}, {0}};
 
 int ecc_25519_is_identity(const ecc_25519_work *in) {
-	return (check_zero(in->X)|check_zero(in->Y)|check_zero(in->Z));
+	unsigned int Y_Z[32];
+
+	sub(Y_Z, in->Y, in->Z);
+	squeeze(Y_Z);
+
+	return (check_zero(in->X)&check_zero(Y_Z));
 }
 
 void ecc_25519_double(ecc_25519_work *out, const ecc_25519_work *in) {
-	unsigned int A[32], B[32], C[32], D[32], E[32], U[32], t0[32], t1[32], t2[32], t3[32], t4[32], t5[32];
+	unsigned int A[32], B[32], C[32], D[32], E[32], F[32], G[32], H[32], t0[32], t1[32], t2[32], t3[32];
 
 	square(A, in->X);
 	square(B, in->Y);
-	mult_int(U, 486664, B);
-	add(C, A, U);
-	sub(D, A, U);
-	add(t0, in->X, in->Y);
-	square(t1, t0);
-	sub(t2, t1, A);
-	sub(E, t2, B);
-	mult(out->X, C, D);
-	square(t3, in->Z);
-	mult_int(t4, 973320, t3);
-	sub(t5, C, t4);
-	mult(out->Y, E, t5);
-	mult(out->Z, D, E);
-	selectw(out, out, &id, ecc_25519_is_identity(out));
+	square(t0, in->Z);
+	mult_int(C, 2, t0);
+	mult_int(D, 486664, A);
+	add(t1, in->X, in->Y);
+	square(t2, t1);
+	sub(t3, t2, A); squeeze(t3);
+	sub(E, t3, B);
+	add(G, D, B); squeeze(G);
+	sub(F, G, C);
+	sub(H, D, B);
+	mult(out->X, E, F);
+	mult(out->Y, G, H);
+	mult(out->T, E, H);
+	mult(out->Z, F, G);
 }
 
 void ecc_25519_add(ecc_25519_work *out, const ecc_25519_work *in1, const ecc_25519_work *in2) {
-	unsigned int A[32], B[32], C[32], D[32], E[32], H[32], I[32], t0[32], t1[32], t2[32], t3[32], t4[32], t5[32], t6[32], t7[32], t8[32];
-	int id1 = ecc_25519_is_identity(in1), id2 = ecc_25519_is_identity(in2);
+	unsigned int A[32], B[32], C[32], D[32], E[32], F[32], G[32], H[32], t0[32], t1[32], t2[32], t3[32], t4[32], t5[32];
 
-	mult(A, in1->Z, in2->Z);
-	square(t0, A);
-	mult_int(B, 486660, t0);
-	mult(C, in1->X, in2->X);
-	mult(D, in1->Y, in2->Y);
-	mult(E, C, D);
-	mult_int(t1, 486664, D);
-	sub(H, C, t1);
-	add(t2, in1->X, in1->Y);
-	add(t3, in2->X, in2->Y);
-	mult(t4, t2, t3);
-	sub(t5, t4, C);
-	sub(I, t5, D);
-	add(t6, E, B);
-	mult(out->X, t6, H);
-	sub(t7, E, B);
-	mult(out->Y, t7, I);
-	mult(t8, H, I);
-	mult(out->Z, A, t8);
-	selectw(out, out, in1, id2);
-	selectw(out, out, in2, id1);
+	mult(A, in1->X, in2->X);
+	mult(B, in1->Y, in2->Y);
+	mult_int(t0, 486660, in2->T);
+	mult(C, in1->T, t0);
+	mult(D, in1->Z, in2->Z);
+	add(t1, in1->X, in1->Y);
+	add(t2, in2->X, in2->Y);
+	mult(t3, t1, t2);
+	sub(t4, t3, A); squeeze(t4);
+	sub(E, t4, B);
+	sub(F, D, C);
+	add(G, D, C);
+	mult_int(t5, 486664, A);
+	sub(H, B, t5);
+	mult(out->X, E, F);
+	mult(out->Y, G, H);
+	mult(out->T, E, H);
+	mult(out->Z, F, G);
 }
 
 void ecc_25519_scalarmult(ecc_25519_work *out, const ecc_secret_key_256 *n, const ecc_25519_work *base) {
-	ecc_25519_work Q2, Q2p, cur;
-	int i, b, pos;
-
-	for (i = 0; i < 32; i++) {
-		cur.X[i] = 0;
-		cur.Y[i] = 0;
-		cur.Z[i] = (i == 0);
-	}
+	ecc_25519_work Q2, Q2p;
+	ecc_25519_work cur = id;
+	int b, pos;
 
 	for (pos = 255; pos >= 0; --pos) {
 		b = n->s[pos / 8] >> (pos & 7);
@@ -460,23 +464,23 @@ void ecc_25519_scalarmult(ecc_25519_work *out, const ecc_secret_key_256 *n, cons
 		selectw(&cur, &Q2, &Q2p, b);
 	}
 
-	for (i = 0; i < 32; i++) {
-		out->X[i] = cur.X[i];
-		out->Y[i] = cur.Y[i];
-		out->Z[i] = cur.Z[i];
-	}
+	*out = cur;
 }
 
 static const ecc_25519_work default_base = {
-	{0x51, 0x89, 0xfa, 0x46, 0xa0, 0xc0, 0x8b, 0x3d,
-         0x30, 0x60, 0xf1, 0x7d, 0x2a, 0xec, 0xcd, 0xf3,
-	 0x24, 0x50, 0x96, 0x62, 0x21, 0xfc, 0xe6, 0x18,
-	 0x14, 0xd6, 0x11, 0xf8, 0x11, 0x91, 0xa1, 0x03},
-	{0xf3, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
-	 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
-	 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
-	 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x5f},
-	{1}
+	{0xd4, 0x6b, 0xfe, 0x7f, 0x39, 0xfa, 0x8c, 0x22,
+	 0xe1, 0x96, 0x23, 0xeb, 0x26, 0xb7, 0x8e, 0x6a,
+	 0x34, 0x74, 0x8b, 0x66, 0xd6, 0xa3, 0x26, 0xdd,
+	 0x19, 0x5e, 0x9f, 0x21, 0x50, 0x43, 0x7c, 0x54},
+	{0x58, 0x66, 0x66, 0x66, 0x66, 0x66, 0x66, 0x66,
+	 0x66, 0x66, 0x66, 0x66, 0x66, 0x66, 0x66, 0x66,
+	 0x66, 0x66, 0x66, 0x66, 0x66, 0x66, 0x66, 0x66,
+	 0x66, 0x66, 0x66, 0x66, 0x66, 0x66, 0x66, 0x66},
+	{1},
+	{0x47, 0x56, 0x98, 0x99, 0xc7, 0x61, 0x0a, 0x82,
+	 0x1a, 0xdf, 0x82, 0x22, 0x1f, 0x2c, 0x72, 0x88,
+	 0xc3, 0x29, 0x09, 0x52, 0x78, 0xe9, 0x1e, 0xe4,
+	 0x47, 0x4b, 0x4c, 0x81, 0xa6, 0x02, 0xfd, 0x29}
 };
 
 void ecc_25519_scalarmult_base(ecc_25519_work *out, const ecc_secret_key_256 *n) {
