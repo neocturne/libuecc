@@ -57,5 +57,6 @@ void ecc_25519_secret_add(ecc_secret_key_256 *out, const ecc_secret_key_256 *in1
 void ecc_25519_secret_sub(ecc_secret_key_256 *out, const ecc_secret_key_256 *in1, const ecc_secret_key_256 *in2);
 void ecc_25519_secret_reduce(ecc_secret_key_256 *out, const ecc_secret_key_256 *in);
 void ecc_25519_secret_mult(ecc_secret_key_256 *out, const ecc_secret_key_256 *in1, const ecc_secret_key_256 *in2);
+void ecc_25519_secret_sanitize(ecc_secret_key_256 *out, const ecc_secret_key_256 *in);
 
 #endif /* _LIBUECC_ECC_H_ */

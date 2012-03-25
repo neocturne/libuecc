@@ -176,3 +176,12 @@ void ecc_25519_secret_mult(ecc_secret_key_256 *out, const ecc_secret_key_256 *in
 	montgomery(out->s, R, C);
 }
 
+/* TODO implement properly, rule out zero etc. */
+void ecc_25519_secret_sanitize(ecc_secret_key_256 *out, const ecc_secret_key_256 *in) {
+	int i;
+
+	for (i = 0; i < 32; i++)
+		out->s[i] = in->s[i];
+
+	out->s[31] |= 0x80;
+}
