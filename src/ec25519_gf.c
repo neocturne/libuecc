@@ -191,6 +191,8 @@ void ecc_25519_gf_recip(ecc_int_256 *out, const ecc_int_256 *in) {
 		A[i] = in->p[i];
 	}
 
+	reduce(A);
+
 	for (i = 0; i < 32; i++) {
 		unsigned char c;
 
