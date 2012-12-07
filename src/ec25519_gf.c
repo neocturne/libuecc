@@ -57,43 +57,43 @@ static void select(unsigned char out[32], const unsigned char r[32], const unsig
 	}
 }
 
-int ecc_25519_secret_is_zero(const ecc_secret_key_256 *in) {
+int ecc_25519_gf_is_zero(const ecc_int_256 *in) {
 	int i;
-	ecc_secret_key_256 r;
+	ecc_int_256 r;
 	unsigned int bits;
 
-	ecc_25519_secret_reduce(&r, in);
+	ecc_25519_gf_reduce(&r, in);
 
 	for (i = 0; i < 32; i++)
-		bits |= r.s[i];
+		bits |= r.p[i];
 
 	return (((bits-1)>>8) & 1);
 }
 
-void ecc_25519_secret_add(ecc_secret_key_256 *out, const ecc_secret_key_256 *in1, const ecc_secret_key_256 *in2) {
+void ecc_25519_gf_add(ecc_int_256 *out, const ecc_int_256 *in1, const ecc_int_256 *in2) {
 	unsigned int j;
 	unsigned int u;
-	int nq = 1 - (in1->s[31]>>4) - (in2->s[31]>>4);
+	int nq = 1 - (in1->p[31]>>4) - (in2->p[31]>>4);
 
 	u = 0;
 	for (j = 0; j < 32; ++j) {
-		u += in1->s[j] + in2->s[j] + nq*q[j];
+		u += in1->p[j] + in2->p[j] + nq*q[j];
 
-		out->s[j] = u;
+		out->p[j] = u;
 		u = ASR(u, 8);
 	}
 }
 
-void ecc_25519_secret_sub(ecc_secret_key_256 *out, const ecc_secret_key_256 *in1, const ecc_secret_key_256 *in2) {
+void ecc_25519_gf_sub(ecc_int_256 *out, const ecc_int_256 *in1, const ecc_int_256 *in2) {
 	unsigned int j;
 	unsigned int u;
-	int nq = 8 - (in1->s[31]>>4) + (in2->s[31]>>4);
+	int nq = 8 - (in1->p[31]>>4) + (in2->p[31]>>4);
 
 	u = 0;
 	for (j = 0; j < 32; ++j) {
-		u += in1->s[j] - in2->s[j] + nq*q[j];
+		u += in1->p[j] - in2->p[j] + nq*q[j];
 
-		out->s[j] = u;
+		out->p[j] = u;
 		u = ASR(u, 8);
 	}
 }
@@ -120,13 +120,13 @@ static void reduce(unsigned char a[32]) {
 	select(a, out1, out2, IS_NEGATIVE(u1));
 }
 
-void ecc_25519_secret_reduce(ecc_secret_key_256 *out, const ecc_secret_key_256 *in) {
+void ecc_25519_gf_reduce(ecc_int_256 *out, const ecc_int_256 *in) {
 	int i;
 
 	for (i = 0; i < 32; i++)
-		out->s[i] = in->s[i];
+		out->p[i] = in->p[i];
 
-	reduce(out->s);
+	reduce(out->p);
 }
 
 /* Montgomery modular multiplication algorithm */
@@ -154,7 +154,7 @@ static void montgomery(unsigned char out[32], const unsigned char a[32], const u
 }
 
 
-void ecc_25519_secret_mult(ecc_secret_key_256 *out, const ecc_secret_key_256 *in1, const ecc_secret_key_256 *in2) {
+void ecc_25519_gf_mult(ecc_int_256 *out, const ecc_int_256 *in1, const ecc_int_256 *in2) {
 	/* 2^512 mod q */
 	static const unsigned char C[32] = {
 		0x01, 0x0f, 0x9c, 0x44, 0xe3, 0x11, 0x06, 0xa4,
@@ -168,21 +168,21 @@ void ecc_25519_secret_mult(ecc_secret_key_256 *out, const ecc_secret_key_256 *in
 	unsigned int i;
 
 	for (i = 0; i < 32; i++)
-		B[i] = in2->s[i];
+		B[i] = in2->p[i];
 
 	reduce(B);
 
-	montgomery(R, in1->s, B);
-	montgomery(out->s, R, C);
+	montgomery(R, in1->p, B);
+	montgomery(out->p, R, C);
 }
 
-void ecc_25519_secret_sanitize(ecc_secret_key_256 *out, const ecc_secret_key_256 *in) {
+void ecc_25519_gf_sanitize_secret(ecc_int_256 *out, const ecc_int_256 *in) {
 	int i;
 
 	for (i = 0; i < 32; i++)
-		out->s[i] = in->s[i];
+		out->p[i] = in->p[i];
 
-	out->s[0] &= 0xf8;
-	out->s[31] &= 0x7f;
-	out->s[31] |= 0x40;
+	out->p[0] &= 0xf8;
+	out->p[31] &= 0x7f;
+	out->p[31] |= 0x40;
 }

@@ -347,7 +347,40 @@ static void recip(unsigned int out[32], const unsigned int z[32]) {
 	/* 2^255 - 21 */ mult(out, t1, z11);
 }
 
-void ecc_25519_load(ecc_25519_work *out, const ecc_public_key_256 *in) {
+void ecc_25519_load_xy(ecc_25519_work *out, const ecc_int_256 *x, const ecc_int_256 *y) {
+	int i;
+
+	for (i = 0; i < 32; i++) {
+		out->X[i] = x->p[i];
+		out->Y[i] = y->p[i];
+		out->Z[i] = (i == 0);
+	}
+
+	mult(out->T, out->X, out->Y);
+}
+
+void ecc_25519_store_xy(ecc_int_256 *x, ecc_int_256 *y, const ecc_25519_work *in) {
+	unsigned int X[32], Y[32], Z[32];
+	int i;
+
+	recip(Z, in->Z);
+
+	if (x) {
+		mult(X, Z, in->X);
+		freeze(X);
+		for (i = 0; i < 32; i++)
+			x->p[i] = X[i];
+	}
+
+	if (y) {
+		mult(Y, Z, in->Y);
+		freeze(Y);
+		for (i = 0; i < 32; i++)
+			y->p[i] = Y[i];
+	}
+}
+
+void ecc_25519_load_packed(ecc_25519_work *out, const ecc_int_256 *in) {
 	static const unsigned int zero[32] = {0};
 	static const unsigned int one[32] = {1};
 
@@ -377,22 +410,11 @@ void ecc_25519_load(ecc_25519_work *out, const ecc_public_key_256 *in) {
 	mult(out->T, out->X, out->Y);
 }
 
-void ecc_25519_store(ecc_public_key_256 *out, const ecc_25519_work *in) {
-	unsigned int x[32], y[32], z[32];
-	int i;
+void ecc_25519_store_packed(ecc_int_256 *out, const ecc_25519_work *in) {
+	ecc_int_256 y;
 
-	recip(z, in->Z);
-
-	mult(x, z, in->X);
-	mult(y, z, in->Y);
-
-	freeze(x);
-	freeze(y);
-
-	for (i = 0; i < 32; i++)
-		out->p[i] = x[i];
-
-	out->p[31] |= (y[0] << 7);
+	ecc_25519_store_xy(out, &y, in);
+	out->p[31] |= (y.p[0] << 7);
 }
 
 static const ecc_25519_work id = {{0}, {1}, {1}, {0}};
@@ -450,13 +472,13 @@ void ecc_25519_add(ecc_25519_work *out, const ecc_25519_work *in1, const ecc_255
 	mult(out->Z, F, G);
 }
 
-void ecc_25519_scalarmult(ecc_25519_work *out, const ecc_secret_key_256 *n, const ecc_25519_work *base) {
+void ecc_25519_scalarmult(ecc_25519_work *out, const ecc_int_256 *n, const ecc_25519_work *base) {
 	ecc_25519_work Q2, Q2p;
 	ecc_25519_work cur = id;
 	int b, pos;
 
 	for (pos = 255; pos >= 0; --pos) {
-		b = n->s[pos / 8] >> (pos & 7);
+		b = n->p[pos / 8] >> (pos & 7);
 		b &= 1;
 
 		ecc_25519_double(&Q2, &cur);
@@ -483,6 +505,6 @@ static const ecc_25519_work default_base = {
 	 0x47, 0x4b, 0x4c, 0x81, 0xa6, 0x02, 0xfd, 0x29}
 };
 
-void ecc_25519_scalarmult_base(ecc_25519_work *out, const ecc_secret_key_256 *n) {
+void ecc_25519_scalarmult_base(ecc_25519_work *out, const ecc_int_256 *n) {
 	ecc_25519_scalarmult(out, n, &default_base);
 }
