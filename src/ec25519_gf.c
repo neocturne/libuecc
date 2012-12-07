@@ -176,6 +176,57 @@ void ecc_25519_gf_mult(ecc_int_256 *out, const ecc_int_256 *in1, const ecc_int_2
 	montgomery(out->p, R, C);
 }
 
+void ecc_25519_gf_recip(ecc_int_256 *out, const ecc_int_256 *in) {
+	static const unsigned char C[32] = {
+		0x01
+	};
+
+	unsigned char A[32], B[32];
+	unsigned char R1[32], R2[32];
+	int use_r2 = 0;
+	unsigned int i, j;
+
+	for (i = 0; i < 32; i++) {
+		R1[i] = (i == 0);
+		A[i] = in->p[i];
+	}
+
+	for (i = 0; i < 32; i++) {
+		unsigned char c;
+
+		if (i == 0)
+			c = 0xeb; /* q[0] - 2 */
+		else
+			c = q[i];
+
+		for (j = 0; j < 8; j+=2) {
+			if (c & (1 << j)) {
+				if (use_r2)
+					montgomery(R1, R2, A);
+				else
+					montgomery(R2, R1, A);
+
+				use_r2 = !use_r2;
+			}
+
+			montgomery(B, A, A);
+
+			if (c & (2 << j)) {
+				if (use_r2)
+					montgomery(R1, R2, B);
+				else
+					montgomery(R2, R1, B);
+
+				use_r2 = !use_r2;
+			}
+
+			montgomery(A, B, B);
+		}
+	}
+
+	montgomery(out->p, R2, C);
+}
+
 void ecc_25519_gf_sanitize_secret(ecc_int_256 *out, const ecc_int_256 *in) {
 	int i;
 

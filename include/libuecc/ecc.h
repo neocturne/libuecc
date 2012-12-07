@@ -61,6 +61,7 @@ void ecc_25519_gf_add(ecc_int_256 *out, const ecc_int_256 *in1, const ecc_int_25
 void ecc_25519_gf_sub(ecc_int_256 *out, const ecc_int_256 *in1, const ecc_int_256 *in2);
 void ecc_25519_gf_reduce(ecc_int_256 *out, const ecc_int_256 *in);
 void ecc_25519_gf_mult(ecc_int_256 *out, const ecc_int_256 *in1, const ecc_int_256 *in2);
+void ecc_25519_gf_recip(ecc_int_256 *out, const ecc_int_256 *in);
 
 void ecc_25519_gf_sanitize_secret(ecc_int_256 *out, const ecc_int_256 *in);
 
