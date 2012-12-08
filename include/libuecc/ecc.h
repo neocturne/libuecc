@@ -56,6 +56,7 @@ void ecc_25519_scalarmult(ecc_25519_work *out, const ecc_int_256 *n, const ecc_2
 void ecc_25519_scalarmult_base(ecc_25519_work *out, const ecc_int_256 *n);
 
 /* operations on elements of the prime field F_q for q = 2^252 + 27742317777372353535851937790883648493 */
+extern const ecc_int_256 ecc_25519_gf_order;
 int ecc_25519_gf_is_zero(const ecc_int_256 *in);
 void ecc_25519_gf_add(ecc_int_256 *out, const ecc_int_256 *in1, const ecc_int_256 *in2);
 void ecc_25519_gf_sub(ecc_int_256 *out, const ecc_int_256 *in1, const ecc_int_256 *in2);
