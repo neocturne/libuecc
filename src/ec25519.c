@@ -24,18 +24,18 @@
   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-/*
-  EC group operations for Twisted Edwards Curve ax^2 + y^2 = 1 + dx^2y^2 with
-    a = 486664
-    d = 486660
-  on prime field p = 2^255 - 19.
-
-  The curve is equivalent to the Montgomery Curve used in D. J. Bernstein's
-  Curve25519 Diffie-Hellman algorithm
-
-  See http://hyperelliptic.org/EFD/g1p/auto-twisted-extended.html for add and
-  double operations
-*/
+/** \file
+ * EC group operations for Twisted Edwards Curve \f$ ax^2 + y^2 = 1 + dx^2y^2 \f$ with
+ *    \f$ a = 486664 \f$ and
+ *    \f$ d = 486660 \f$
+ * on prime field \f$ p = 2^{255} - 19 \f$.
+ *
+ * The curve is equivalent to the Montgomery Curve used in D. J. Bernstein's
+ * Curve25519 Diffie-Hellman algorithm.
+ *
+ * See http://hyperelliptic.org/EFD/g1p/auto-twisted-extended.html for add and
+ * double operations.
+ */
 
 #include <libuecc/ecc.h>
 
