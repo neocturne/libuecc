@@ -61,7 +61,7 @@ static void select(unsigned char out[32], const unsigned char r[32], const unsig
 int ecc_25519_gf_is_zero(const ecc_int_256 *in) {
 	int i;
 	ecc_int_256 r;
-	unsigned int bits;
+	unsigned int bits = 0;
 
 	ecc_25519_gf_reduce(&r, in);
 
