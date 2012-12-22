@@ -159,7 +159,7 @@ static int check_zero(const unsigned int x[32]) {
 	return (check_equal(x, zero) | check_equal(x, p));
 }
 
-static void selectw(ecc_25519_work *out, const ecc_25519_work *r, const ecc_25519_work *s, unsigned int b) {
+static void selectw(ecc_25519_work_t *out, const ecc_25519_work_t *r, const ecc_25519_work_t *s, unsigned int b) {
 	unsigned int j;
 	unsigned int t;
 	unsigned int bminus1;
@@ -347,7 +347,7 @@ static void recip(unsigned int out[32], const unsigned int z[32]) {
 	/* 2^255 - 21 */ mult(out, t1, z11);
 }
 
-void ecc_25519_load_xy(ecc_25519_work *out, const ecc_int_256 *x, const ecc_int_256 *y) {
+void ecc_25519_load_xy(ecc_25519_work_t *out, const ecc_int256_t *x, const ecc_int256_t *y) {
 	int i;
 
 	for (i = 0; i < 32; i++) {
@@ -359,7 +359,7 @@ void ecc_25519_load_xy(ecc_25519_work *out, const ecc_int_256 *x, const ecc_int_
 	mult(out->T, out->X, out->Y);
 }
 
-void ecc_25519_store_xy(ecc_int_256 *x, ecc_int_256 *y, const ecc_25519_work *in) {
+void ecc_25519_store_xy(ecc_int256_t *x, ecc_int256_t *y, const ecc_25519_work_t *in) {
 	unsigned int X[32], Y[32], Z[32];
 	int i;
 
@@ -380,7 +380,7 @@ void ecc_25519_store_xy(ecc_int_256 *x, ecc_int_256 *y, const ecc_25519_work *in
 	}
 }
 
-void ecc_25519_load_packed(ecc_25519_work *out, const ecc_int_256 *in) {
+void ecc_25519_load_packed(ecc_25519_work_t *out, const ecc_int256_t *in) {
 	static const unsigned int zero[32] = {0};
 	static const unsigned int one[32] = {1};
 
@@ -410,16 +410,16 @@ void ecc_25519_load_packed(ecc_25519_work *out, const ecc_int_256 *in) {
 	mult(out->T, out->X, out->Y);
 }
 
-void ecc_25519_store_packed(ecc_int_256 *out, const ecc_25519_work *in) {
-	ecc_int_256 y;
+void ecc_25519_store_packed(ecc_int256_t *out, const ecc_25519_work_t *in) {
+	ecc_int256_t y;
 
 	ecc_25519_store_xy(out, &y, in);
 	out->p[31] |= (y.p[0] << 7);
 }
 
-static const ecc_25519_work id = {{0}, {1}, {1}, {0}};
+static const ecc_25519_work_t id = {{0}, {1}, {1}, {0}};
 
-int ecc_25519_is_identity(const ecc_25519_work *in) {
+int ecc_25519_is_identity(const ecc_25519_work_t *in) {
 	unsigned int Y_Z[32];
 
 	sub(Y_Z, in->Y, in->Z);
@@ -428,7 +428,7 @@ int ecc_25519_is_identity(const ecc_25519_work *in) {
 	return (check_zero(in->X)&check_zero(Y_Z));
 }
 
-void ecc_25519_double(ecc_25519_work *out, const ecc_25519_work *in) {
+void ecc_25519_double(ecc_25519_work_t *out, const ecc_25519_work_t *in) {
 	unsigned int A[32], B[32], C[32], D[32], E[32], F[32], G[32], H[32], t0[32], t1[32], t2[32], t3[32];
 
 	square(A, in->X);
@@ -449,7 +449,7 @@ void ecc_25519_double(ecc_25519_work *out, const ecc_25519_work *in) {
 	mult(out->Z, F, G);
 }
 
-void ecc_25519_add(ecc_25519_work *out, const ecc_25519_work *in1, const ecc_25519_work *in2) {
+void ecc_25519_add(ecc_25519_work_t *out, const ecc_25519_work_t *in1, const ecc_25519_work_t *in2) {
 	unsigned int A[32], B[32], C[32], D[32], E[32], F[32], G[32], H[32], t0[32], t1[32], t2[32], t3[32], t4[32], t5[32];
 
 	mult(A, in1->X, in2->X);
@@ -472,9 +472,9 @@ void ecc_25519_add(ecc_25519_work *out, const ecc_25519_work *in1, const ecc_255
 	mult(out->Z, F, G);
 }
 
-void ecc_25519_scalarmult(ecc_25519_work *out, const ecc_int_256 *n, const ecc_25519_work *base) {
-	ecc_25519_work Q2, Q2p;
-	ecc_25519_work cur = id;
+void ecc_25519_scalarmult(ecc_25519_work_t *out, const ecc_int256_t *n, const ecc_25519_work_t *base) {
+	ecc_25519_work_t Q2, Q2p;
+	ecc_25519_work_t cur = id;
 	int b, pos;
 
 	for (pos = 255; pos >= 0; --pos) {
@@ -489,7 +489,7 @@ void ecc_25519_scalarmult(ecc_25519_work *out, const ecc_int_256 *n, const ecc_2
 	*out = cur;
 }
 
-static const ecc_25519_work default_base = {
+static const ecc_25519_work_t default_base = {
 	{0xd4, 0x6b, 0xfe, 0x7f, 0x39, 0xfa, 0x8c, 0x22,
 	 0xe1, 0x96, 0x23, 0xeb, 0x26, 0xb7, 0x8e, 0x6a,
 	 0x34, 0x74, 0x8b, 0x66, 0xd6, 0xa3, 0x26, 0xdd,
@@ -505,6 +505,6 @@ static const ecc_25519_work default_base = {
 	 0x47, 0x4b, 0x4c, 0x81, 0xa6, 0x02, 0xfd, 0x29}
 };
 
-void ecc_25519_scalarmult_base(ecc_25519_work *out, const ecc_int_256 *n) {
+void ecc_25519_scalarmult_base(ecc_25519_work_t *out, const ecc_int256_t *n) {
 	ecc_25519_scalarmult(out, n, &default_base);
 }

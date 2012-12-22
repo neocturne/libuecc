@@ -37,7 +37,7 @@
 #define ASR(n,s) (((n) >> s)|(IS_NEGATIVE(n)*((unsigned)-1) << (8*sizeof(n)-s)))
 
 
-const ecc_int_256 ecc_25519_gf_order = {{
+const ecc_int256_t ecc_25519_gf_order = {{
 	0xed, 0xd3, 0xf5, 0x5c, 0x1a, 0x63, 0x12, 0x58,
 	0xd6, 0x9c, 0xf7, 0xa2, 0xde, 0xf9, 0xde, 0x14,
 	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -58,9 +58,9 @@ static void select(unsigned char out[32], const unsigned char r[32], const unsig
 	}
 }
 
-int ecc_25519_gf_is_zero(const ecc_int_256 *in) {
+int ecc_25519_gf_is_zero(const ecc_int256_t *in) {
 	int i;
-	ecc_int_256 r;
+	ecc_int256_t r;
 	unsigned int bits = 0;
 
 	ecc_25519_gf_reduce(&r, in);
@@ -71,7 +71,7 @@ int ecc_25519_gf_is_zero(const ecc_int_256 *in) {
 	return (((bits-1)>>8) & 1);
 }
 
-void ecc_25519_gf_add(ecc_int_256 *out, const ecc_int_256 *in1, const ecc_int_256 *in2) {
+void ecc_25519_gf_add(ecc_int256_t *out, const ecc_int256_t *in1, const ecc_int256_t *in2) {
 	unsigned int j;
 	unsigned int u;
 	int nq = 1 - (in1->p[31]>>4) - (in2->p[31]>>4);
@@ -85,7 +85,7 @@ void ecc_25519_gf_add(ecc_int_256 *out, const ecc_int_256 *in1, const ecc_int_25
 	}
 }
 
-void ecc_25519_gf_sub(ecc_int_256 *out, const ecc_int_256 *in1, const ecc_int_256 *in2) {
+void ecc_25519_gf_sub(ecc_int256_t *out, const ecc_int256_t *in1, const ecc_int256_t *in2) {
 	unsigned int j;
 	unsigned int u;
 	int nq = 8 - (in1->p[31]>>4) + (in2->p[31]>>4);
@@ -121,7 +121,7 @@ static void reduce(unsigned char a[32]) {
 	select(a, out1, out2, IS_NEGATIVE(u1));
 }
 
-void ecc_25519_gf_reduce(ecc_int_256 *out, const ecc_int_256 *in) {
+void ecc_25519_gf_reduce(ecc_int256_t *out, const ecc_int256_t *in) {
 	int i;
 
 	for (i = 0; i < 32; i++)
@@ -155,7 +155,7 @@ static void montgomery(unsigned char out[32], const unsigned char a[32], const u
 }
 
 
-void ecc_25519_gf_mult(ecc_int_256 *out, const ecc_int_256 *in1, const ecc_int_256 *in2) {
+void ecc_25519_gf_mult(ecc_int256_t *out, const ecc_int256_t *in1, const ecc_int256_t *in2) {
 	/* 2^512 mod q */
 	static const unsigned char C[32] = {
 		0x01, 0x0f, 0x9c, 0x44, 0xe3, 0x11, 0x06, 0xa4,
@@ -177,7 +177,7 @@ void ecc_25519_gf_mult(ecc_int_256 *out, const ecc_int_256 *in1, const ecc_int_2
 	montgomery(out->p, R, C);
 }
 
-void ecc_25519_gf_recip(ecc_int_256 *out, const ecc_int_256 *in) {
+void ecc_25519_gf_recip(ecc_int256_t *out, const ecc_int256_t *in) {
 	static const unsigned char C[32] = {
 		0x01
 	};
@@ -230,7 +230,7 @@ void ecc_25519_gf_recip(ecc_int_256 *out, const ecc_int_256 *in) {
 	montgomery(out->p, R2, C);
 }
 
-void ecc_25519_gf_sanitize_secret(ecc_int_256 *out, const ecc_int_256 *in) {
+void ecc_25519_gf_sanitize_secret(ecc_int256_t *out, const ecc_int256_t *in) {
 	int i;
 
 	for (i = 0; i < 32; i++)
