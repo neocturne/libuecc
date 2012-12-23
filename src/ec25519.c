@@ -40,6 +40,7 @@
 #include <libuecc/ecc.h>
 
 
+/** Adds two unpacked integers (modulo p) */
 static void add(unsigned int out[32], const unsigned int a[32], const unsigned int b[32]) {
 	unsigned int j;
 	unsigned int u;
@@ -48,6 +49,7 @@ static void add(unsigned int out[32], const unsigned int a[32], const unsigned i
 	u += a[31] + b[31]; out[31] = u;
 }
 
+/** Subtracts two unpacked integers (modulo p) */
 static void sub(unsigned int out[32], const unsigned int a[32], const unsigned int b[32]) {
 	unsigned int j;
 	unsigned int u;
@@ -61,6 +63,7 @@ static void sub(unsigned int out[32], const unsigned int a[32], const unsigned i
 	out[31] = u;
 }
 
+/** Performs carry and reduce on an unpacked integer */
 static void squeeze(unsigned int a[32]) {
 	unsigned int j;
 	unsigned int u;
@@ -72,6 +75,11 @@ static void squeeze(unsigned int a[32]) {
 	u += a[31]; a[31] = u;
 }
 
+/**
+ * Ensures that the output of a previous \ref squeeze is fully reduced
+ *
+ * After a \ref freeze, only the lower byte of each integer part holds a meaningful value
+ */
 static void freeze(unsigned int a[32]) {
 	static const unsigned int minusp[32] = {
 		19, 0, 0, 0, 0, 0, 0, 0,
@@ -90,6 +98,7 @@ static void freeze(unsigned int a[32]) {
 	for (j = 0; j < 32; j++) a[j] ^= negative & (aorig[j] ^ a[j]);
 }
 
+/** Multiplies two unpacked integers (modulo p) */
 static void mult(unsigned int out[32], const unsigned int a[32], const unsigned int b[32]) {
 	unsigned int i;
 	unsigned int j;
@@ -104,6 +113,7 @@ static void mult(unsigned int out[32], const unsigned int a[32], const unsigned 
 	squeeze(out);
 }
 
+/** Multiplies an unpacked integer with a small integer (modulo p) */
 static void mult_int(unsigned int out[32], const unsigned int n, const unsigned int a[32]) {
 	unsigned int j;
 	unsigned int u;
@@ -116,6 +126,7 @@ static void mult_int(unsigned int out[32], const unsigned int n, const unsigned 
 	u += out[j]; out[j] = u;
 }
 
+/** Squares an unpacked integer */
 static void square(unsigned int out[32], const unsigned int a[32]) {
 	unsigned int i;
 	unsigned int j;
@@ -135,6 +146,7 @@ static void square(unsigned int out[32], const unsigned int a[32]) {
 	squeeze(out);
 }
 
+/** Checks for the equality of two unpacked integers */
 static int check_equal(const unsigned int x[32], const unsigned int y[32]) {
 	unsigned int differentbits = 0;
 	int i;
@@ -147,6 +159,11 @@ static int check_equal(const unsigned int x[32], const unsigned int y[32]) {
 	return (1 & ((differentbits - 1) >> 16));
 }
 
+/**
+ * Checks if an unpacked integer equals zero
+ *
+ * The intergers must be must be \ref squeeze "squeezed" before.
+ */
 static int check_zero(const unsigned int x[32]) {
 	static const unsigned int zero[32] = {0};
 	static const unsigned int p[32] = {
@@ -159,6 +176,7 @@ static int check_zero(const unsigned int x[32]) {
 	return (check_equal(x, zero) | check_equal(x, p));
 }
 
+/** Copies r to out when b == 0, s when b == 1 */
 static void selectw(ecc_25519_work_t *out, const ecc_25519_work_t *r, const ecc_25519_work_t *s, unsigned int b) {
 	unsigned int j;
 	unsigned int t;
@@ -180,6 +198,7 @@ static void selectw(ecc_25519_work_t *out, const ecc_25519_work_t *r, const ecc_
 	}
 }
 
+/** Copies r to out when b == 0, s when b == 1 */
 static void select(unsigned int out[32], const unsigned int r[32], const unsigned int s[32], unsigned int b) {
 	unsigned int j;
 	unsigned int t;
@@ -192,6 +211,11 @@ static void select(unsigned int out[32], const unsigned int r[32], const unsigne
 	}
 }
 
+/**
+ * Computes the square root of an unpacked integer (in the prime field modulo p)
+ *
+ * If the given integer has no square root, the result is undefined.
+ */
 static void square_root(unsigned int out[32], const unsigned int z[32]) {
 	static const unsigned int minus1[32] = {
 		0xec, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
@@ -281,6 +305,7 @@ static void square_root(unsigned int out[32], const unsigned int z[32]) {
 	select(out, z2_252_1, z2_252_1_rho_s, check_equal(t1, minus1));
 }
 
+/** Computes the reciprocal of an unpacked integer (in the prime field modulo p) */
 static void recip(unsigned int out[32], const unsigned int z[32]) {
 	unsigned int z2[32];
 	unsigned int z9[32];
@@ -347,6 +372,7 @@ static void recip(unsigned int out[32], const unsigned int z[32]) {
 	/* 2^255 - 21 */ mult(out, t1, z11);
 }
 
+/** Loads a point with given coordinates into its unpacked representation */
 void ecc_25519_load_xy(ecc_25519_work_t *out, const ecc_int256_t *x, const ecc_int256_t *y) {
 	int i;
 
@@ -359,6 +385,13 @@ void ecc_25519_load_xy(ecc_25519_work_t *out, const ecc_int256_t *x, const ecc_i
 	mult(out->T, out->X, out->Y);
 }
 
+/**
+ * Stores a point's x and y coordinates
+ *
+ * \param x Returns the x coordinate of the point. May be NULL.
+ * \param y Returns the y coordinate of the point. May be NULL.
+ * \param in The unpacked point to store.
+ */
 void ecc_25519_store_xy(ecc_int256_t *x, ecc_int256_t *y, const ecc_25519_work_t *in) {
 	unsigned int X[32], Y[32], Z[32];
 	int i;
@@ -380,6 +413,7 @@ void ecc_25519_store_xy(ecc_int256_t *x, ecc_int256_t *y, const ecc_25519_work_t
 	}
 }
 
+/** Loads a packed point into its unpacked representation */
 void ecc_25519_load_packed(ecc_25519_work_t *out, const ecc_int256_t *in) {
 	static const unsigned int zero[32] = {0};
 	static const unsigned int one[32] = {1};
@@ -410,6 +444,7 @@ void ecc_25519_load_packed(ecc_25519_work_t *out, const ecc_int256_t *in) {
 	mult(out->T, out->X, out->Y);
 }
 
+/** Stores a point into its packed representation */
 void ecc_25519_store_packed(ecc_int256_t *out, const ecc_25519_work_t *in) {
 	ecc_int256_t y;
 
@@ -417,8 +452,10 @@ void ecc_25519_store_packed(ecc_int256_t *out, const ecc_25519_work_t *in) {
 	out->p[31] |= (y.p[0] << 7);
 }
 
+/** The identity element */
 static const ecc_25519_work_t id = {{0}, {1}, {1}, {0}};
 
+/** Checks if a point is the identity element of the Elliptic Curve group */
 int ecc_25519_is_identity(const ecc_25519_work_t *in) {
 	unsigned int Y_Z[32];
 
@@ -428,6 +465,13 @@ int ecc_25519_is_identity(const ecc_25519_work_t *in) {
 	return (check_zero(in->X)&check_zero(Y_Z));
 }
 
+/**
+ * Doubles a point of the Elliptic Curve
+ *
+ * ecc_25519_double(out, in) is equivalent to ecc_25519_add(out, in, in), but faster.
+ *
+ * The same pointers may be used for input and output.
+ */
 void ecc_25519_double(ecc_25519_work_t *out, const ecc_25519_work_t *in) {
 	unsigned int A[32], B[32], C[32], D[32], E[32], F[32], G[32], H[32], t0[32], t1[32], t2[32], t3[32];
 
@@ -449,6 +493,11 @@ void ecc_25519_double(ecc_25519_work_t *out, const ecc_25519_work_t *in) {
 	mult(out->Z, F, G);
 }
 
+/**
+ * Adds two points of the Elliptic Curve
+ *
+ * The same pointers may be used for input and output.
+ */
 void ecc_25519_add(ecc_25519_work_t *out, const ecc_25519_work_t *in1, const ecc_25519_work_t *in2) {
 	unsigned int A[32], B[32], C[32], D[32], E[32], F[32], G[32], H[32], t0[32], t1[32], t2[32], t3[32], t4[32], t5[32];
 
@@ -472,6 +521,11 @@ void ecc_25519_add(ecc_25519_work_t *out, const ecc_25519_work_t *in1, const ecc
 	mult(out->Z, F, G);
 }
 
+/**
+ * Does a scalar multiplication of a point of the Elliptic Curve with an integer
+ *
+ * The same pointers may be used for input and output.
+ **/
 void ecc_25519_scalarmult(ecc_25519_work_t *out, const ecc_int256_t *n, const ecc_25519_work_t *base) {
 	ecc_25519_work_t Q2, Q2p;
 	ecc_25519_work_t cur = id;
@@ -489,6 +543,7 @@ void ecc_25519_scalarmult(ecc_25519_work_t *out, const ecc_int256_t *n, const ec
 	*out = cur;
 }
 
+/** The ec25519 default base */
 static const ecc_25519_work_t default_base = {
 	{0xd4, 0x6b, 0xfe, 0x7f, 0x39, 0xfa, 0x8c, 0x22,
 	 0xe1, 0x96, 0x23, 0xeb, 0x26, 0xb7, 0x8e, 0x6a,
@@ -505,6 +560,11 @@ static const ecc_25519_work_t default_base = {
 	 0x47, 0x4b, 0x4c, 0x81, 0xa6, 0x02, 0xfd, 0x29}
 };
 
+/**
+ * Does a scalar multiplication of the default base point (generator element) of the Elliptic Curve with an integer
+ *
+ * The order of the base point is \f$ 2^{252} + 27742317777372353535851937790883648493 \f$.
+ */
 void ecc_25519_scalarmult_base(ecc_25519_work_t *out, const ecc_int256_t *n) {
 	ecc_25519_scalarmult(out, n, &default_base);
 }

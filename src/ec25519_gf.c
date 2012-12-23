@@ -24,19 +24,27 @@
   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-/*
-  Simple finite field operations on the prime field F_q for
-  q = 2^252 + 27742317777372353535851937790883648493, which
+/** \file
+  Simple finite field operations on the prime field \f$ F_q \f$ for
+  \f$ q = 2^{252} + 27742317777372353535851937790883648493 \f$, which
   is the order of the base point used for ec25519
 */
 
 #include <libuecc/ecc.h>
 
 
+/** Checks if the highest bit of an unsigned integer is set */
 #define IS_NEGATIVE(n) ((int)((((unsigned)n) >> (8*sizeof(n)-1))&1))
+
+/** Performs an arithmetic right shift */
 #define ASR(n,s) (((n) >> s)|(IS_NEGATIVE(n)*((unsigned)-1) << (8*sizeof(n)-s)))
 
 
+/**
+ * The order of the prime field
+ *
+ * The order is \f$ 2^{252} + 27742317777372353535851937790883648493 \f$.
+ */
 const ecc_int256_t ecc_25519_gf_order = {{
 	0xed, 0xd3, 0xf5, 0x5c, 0x1a, 0x63, 0x12, 0x58,
 	0xd6, 0x9c, 0xf7, 0xa2, 0xde, 0xf9, 0xde, 0x14,
@@ -44,8 +52,12 @@ const ecc_int256_t ecc_25519_gf_order = {{
 	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x10
 }};
 
+/** An internal alias for \ref ecc_25519_gf_order */
 static const unsigned char *q = ecc_25519_gf_order.p;
 
+/**
+ * Copies the content of r into out if b == 0, the contents of s if b == 1
+ */
 static void select(unsigned char out[32], const unsigned char r[32], const unsigned char s[32], unsigned int b) {
 	unsigned int j;
 	unsigned int t;
@@ -58,6 +70,7 @@ static void select(unsigned char out[32], const unsigned char r[32], const unsig
 	}
 }
 
+/** Checks if an integer is equal to zero (after reduction) */
 int ecc_25519_gf_is_zero(const ecc_int256_t *in) {
 	int i;
 	ecc_int256_t r;
@@ -71,6 +84,11 @@ int ecc_25519_gf_is_zero(const ecc_int256_t *in) {
 	return (((bits-1)>>8) & 1);
 }
 
+/**
+ * Adds two integers as Galois field elements
+ *
+ * The same pointers may be used for input and output.
+ */
 void ecc_25519_gf_add(ecc_int256_t *out, const ecc_int256_t *in1, const ecc_int256_t *in2) {
 	unsigned int j;
 	unsigned int u;
@@ -85,6 +103,11 @@ void ecc_25519_gf_add(ecc_int256_t *out, const ecc_int256_t *in1, const ecc_int2
 	}
 }
 
+/**
+ * Subtracts two integers as Galois field elements
+ *
+ * The same pointers may be used for input and output.
+ */
 void ecc_25519_gf_sub(ecc_int256_t *out, const ecc_int256_t *in1, const ecc_int256_t *in2) {
 	unsigned int j;
 	unsigned int u;
@@ -99,6 +122,7 @@ void ecc_25519_gf_sub(ecc_int256_t *out, const ecc_int256_t *in1, const ecc_int2
 	}
 }
 
+/** Reduces an integer to a unique representation in the range \f$ [0,q-1] \f$ */
 static void reduce(unsigned char a[32]) {
 	unsigned int j;
 	unsigned int nq = a[31] >> 4;
@@ -121,6 +145,11 @@ static void reduce(unsigned char a[32]) {
 	select(a, out1, out2, IS_NEGATIVE(u1));
 }
 
+/**
+ * Reduces an integer to a unique representation in the range \f$ [0,q-1] \f$
+ *
+ * The same pointers may be used for input and output.
+ */
 void ecc_25519_gf_reduce(ecc_int256_t *out, const ecc_int256_t *in) {
 	int i;
 
@@ -130,7 +159,7 @@ void ecc_25519_gf_reduce(ecc_int256_t *out, const ecc_int256_t *in) {
 	reduce(out->p);
 }
 
-/* Montgomery modular multiplication algorithm */
+/** Montgomery modular multiplication algorithm */
 static void montgomery(unsigned char out[32], const unsigned char a[32], const unsigned char b[32]) {
 	unsigned int i, j;
 	unsigned int nq;
@@ -154,7 +183,11 @@ static void montgomery(unsigned char out[32], const unsigned char a[32], const u
 	}
 }
 
-
+/**
+ * Multiplies two integers as Galois field elements
+ *
+ * The same pointers may be used for input and output.
+ */
 void ecc_25519_gf_mult(ecc_int256_t *out, const ecc_int256_t *in1, const ecc_int256_t *in2) {
 	/* 2^512 mod q */
 	static const unsigned char C[32] = {
@@ -177,6 +210,11 @@ void ecc_25519_gf_mult(ecc_int256_t *out, const ecc_int256_t *in1, const ecc_int
 	montgomery(out->p, R, C);
 }
 
+/**
+ * Computes the reciprocal of a Galois field element
+ *
+ * The same pointers may be used for input and output.
+ */
 void ecc_25519_gf_recip(ecc_int256_t *out, const ecc_int256_t *in) {
 	static const unsigned char C[32] = {
 		0x01
@@ -230,6 +268,11 @@ void ecc_25519_gf_recip(ecc_int256_t *out, const ecc_int256_t *in) {
 	montgomery(out->p, R2, C);
 }
 
+/**
+ * Ensures some properties of a Galois field element to make it fit for use as a secret key
+ *
+ * The same pointers may be used for input and output.
+ */
 void ecc_25519_gf_sanitize_secret(ecc_int256_t *out, const ecc_int256_t *in) {
 	int i;
 
