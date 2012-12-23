@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 2.6)
 project(LIBUECC C)
+set(PROJECT_VERSION 2)
 
 set(CMAKE_MODULE_PATH ${LIBUECC_SOURCE_DIR})
 
@@ -10,5 +11,8 @@ include(UseDoxygen OPTIONAL)
 
 add_subdirectory(src)
 
+configure_file(${LIBUECC_SOURCE_DIR}/libuecc.pc.in ${LIBUECC_BINARY_DIR}/libuecc.pc @ONLY)
+install(FILES ${LIBUECC_BINARY_DIR}/libuecc.pc DESTINATION "lib/pkgconfig")
+
 FILE(GLOB include_files "${CMAKE_CURRENT_SOURCE_DIR}/include/libuecc/*.h")
-install(FILES ${include_files} DESTINATION include/libuecc)
+install(FILES ${include_files} DESTINATION "include/libuecc-${PROJECT_VERSION}/libuecc")
