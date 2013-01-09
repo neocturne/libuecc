@@ -40,6 +40,10 @@
 #include <libuecc/ecc.h>
 
 
+static const unsigned int zero[32] = {0};
+static const unsigned int one[32] = {1};
+
+
 /** Adds two unpacked integers (modulo p) */
 static void add(unsigned int out[32], const unsigned int a[32], const unsigned int b[32]) {
 	unsigned int j;
@@ -114,7 +118,7 @@ static void mult(unsigned int out[32], const unsigned int a[32], const unsigned 
 }
 
 /** Multiplies an unpacked integer with a small integer (modulo p) */
-static void mult_int(unsigned int out[32], const unsigned int n, const unsigned int a[32]) {
+static void mult_int(unsigned int out[32], unsigned int n, const unsigned int a[32]) {
 	unsigned int j;
 	unsigned int u;
 
@@ -165,7 +169,6 @@ static int check_equal(const unsigned int x[32], const unsigned int y[32]) {
  * The intergers must be must be \ref squeeze "squeezed" before.
  */
 static int check_zero(const unsigned int x[32]) {
-	static const unsigned int zero[32] = {0};
 	static const unsigned int p[32] = {
 		0xed, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
 		0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
@@ -214,9 +217,9 @@ static void select(unsigned int out[32], const unsigned int r[32], const unsigne
 /**
  * Computes the square root of an unpacked integer (in the prime field modulo p)
  *
- * If the given integer has no square root, the result is undefined.
+ * If the given integer has no square root, 0 is returned, 1 otherwise.
  */
-static void square_root(unsigned int out[32], const unsigned int z[32]) {
+static int square_root(unsigned int out[32], const unsigned int z[32]) {
 	static const unsigned int minus1[32] = {
 		0xec, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
 		0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
@@ -303,6 +306,10 @@ static void square_root(unsigned int out[32], const unsigned int z[32]) {
 	mult(z2_252_1_rho_s, z2_252_1, rho_s);
 
 	select(out, z2_252_1, z2_252_1_rho_s, check_equal(t1, minus1));
+
+	/* Check the root */
+	square(t0, out);
+	return check_equal(t0, z);
 }
 
 /** Computes the reciprocal of an unpacked integer (in the prime field modulo p) */
@@ -373,8 +380,9 @@ static void recip(unsigned int out[32], const unsigned int z[32]) {
 }
 
 /** Loads a point with given coordinates into its unpacked representation */
-void ecc_25519_load_xy(ecc_25519_work_t *out, const ecc_int256_t *x, const ecc_int256_t *y) {
+int ecc_25519_load_xy(ecc_25519_work_t *out, const ecc_int256_t *x, const ecc_int256_t *y) {
 	int i;
+	unsigned int X2[32], Y2[32], aX2[32], dX2[32], dX2Y2[32], aX2_Y2[32], _1_dX2Y2[32], r[32];
 
 	for (i = 0; i < 32; i++) {
 		out->X[i] = x->p[i];
@@ -382,7 +390,23 @@ void ecc_25519_load_xy(ecc_25519_work_t *out, const ecc_int256_t *x, const ecc_i
 		out->Z[i] = (i == 0);
 	}
 
+	/* Check validity */
+	square(X2, out->X);
+	square(Y2, out->Y);
+	mult_int(aX2, 486664, X2);
+	mult_int(dX2, 486660, X2);
+	mult(dX2Y2, dX2, Y2);
+	add(aX2_Y2, aX2, Y2);
+	add(_1_dX2Y2, one, dX2Y2);
+	sub(r, aX2_Y2, _1_dX2Y2);
+	squeeze(r);
+
+	if (!check_zero(r))
+	    return 0;
+
 	mult(out->T, out->X, out->Y);
+
+	return 1;
 }
 
 /**
@@ -414,10 +438,7 @@ void ecc_25519_store_xy(ecc_int256_t *x, ecc_int256_t *y, const ecc_25519_work_t
 }
 
 /** Loads a packed point into its unpacked representation */
-void ecc_25519_load_packed(ecc_25519_work_t *out, const ecc_int256_t *in) {
-	static const unsigned int zero[32] = {0};
-	static const unsigned int one[32] = {1};
-
+int ecc_25519_load_packed(ecc_25519_work_t *out, const ecc_int256_t *in) {
 	int i;
 	unsigned int X2[32] /* X^2 */, aX2[32] /* aX^2 */, dX2[32] /* dX^2 */, _1_aX2[32] /* 1-aX^2 */, _1_dX2[32] /* 1-aX^2 */;
 	unsigned int _1_1_dX2[32]  /* 1/(1-aX^2) */, Y2[32] /* Y^2 */, Y[32], Yt[32];
@@ -436,12 +457,17 @@ void ecc_25519_load_packed(ecc_25519_work_t *out, const ecc_int256_t *in) {
 	sub(_1_dX2, one, dX2);
 	recip(_1_1_dX2, _1_dX2);
 	mult(Y2, _1_aX2, _1_1_dX2);
-	square_root(Y, Y2);
+
+	if (!square_root(Y, Y2))
+		return 0;
+
 	sub(Yt, zero, Y);
 
 	select(out->Y, Y, Yt, (in->p[31] >> 7) ^ (Y[0] & 1));
 
 	mult(out->T, out->X, out->Y);
+
+	return 1;
 }
 
 /** Stores a point into its packed representation */

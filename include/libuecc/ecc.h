@@ -65,10 +65,10 @@ typedef struct _ecc_25519_work {
  * @{
  */
 
-void ecc_25519_load_xy(ecc_25519_work_t *out, const ecc_int256_t *x, const ecc_int256_t *y);
+int ecc_25519_load_xy(ecc_25519_work_t *out, const ecc_int256_t *x, const ecc_int256_t *y);
 void ecc_25519_store_xy(ecc_int256_t *x, ecc_int256_t *y, const ecc_25519_work_t *in);
 
-void ecc_25519_load_packed(ecc_25519_work_t *out, const ecc_int256_t *in);
+int ecc_25519_load_packed(ecc_25519_work_t *out, const ecc_int256_t *in);
 void ecc_25519_store_packed(ecc_int256_t *out, const ecc_25519_work_t *in);
 
 int ecc_25519_is_identity(const ecc_25519_work_t *in);
