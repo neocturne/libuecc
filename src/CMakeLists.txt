@@ -16,7 +16,7 @@ set_target_properties(uecc_static PROPERTIES
 )
 
 install(TARGETS uecc_shared uecc_static
-  ARCHIVE DESTINATION lib
-  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib${LIB_SUFFIX}
+  LIBRARY DESTINATION lib${LIB_SUFFIX}
   RUNTIME DESTINATION bin
 )
