@@ -9,10 +9,12 @@ set(DOXYFILE_EXTRA_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/include")
 
 include(UseDoxygen OPTIONAL)
 
+set(LIBDIR "lib${LIB_SUFFIX}")
+
 add_subdirectory(src)
 
 configure_file(${LIBUECC_SOURCE_DIR}/libuecc.pc.in ${LIBUECC_BINARY_DIR}/libuecc.pc @ONLY)
-install(FILES ${LIBUECC_BINARY_DIR}/libuecc.pc DESTINATION "lib/pkgconfig")
+install(FILES ${LIBUECC_BINARY_DIR}/libuecc.pc DESTINATION "${LIBDIR}/pkgconfig")
 
 FILE(GLOB include_files "${CMAKE_CURRENT_SOURCE_DIR}/include/libuecc/*.h")
 install(FILES ${include_files} DESTINATION "include/libuecc-${PROJECT_VERSION}/libuecc")
