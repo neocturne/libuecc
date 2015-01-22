@@ -64,7 +64,10 @@ void ecc_25519_store_packed(ecc_int256_t *out, const ecc_25519_work_t *in);
 int ecc_25519_is_identity(const ecc_25519_work_t *in);
 void ecc_25519_double(ecc_25519_work_t *out, const ecc_25519_work_t *in);
 void ecc_25519_add(ecc_25519_work_t *out, const ecc_25519_work_t *in1, const ecc_25519_work_t *in2);
+
+void ecc_25519_scalarmult_bits(ecc_25519_work_t *out, const ecc_int256_t *n, const ecc_25519_work_t *base, unsigned bits);
 void ecc_25519_scalarmult(ecc_25519_work_t *out, const ecc_int256_t *n, const ecc_25519_work_t *base);
+void ecc_25519_scalarmult_base_bits(ecc_25519_work_t *out, const ecc_int256_t *n, unsigned bits);
 void ecc_25519_scalarmult_base(ecc_25519_work_t *out, const ecc_int256_t *n);
 
 /**@}*/

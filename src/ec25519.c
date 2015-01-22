@@ -548,16 +548,23 @@ void ecc_25519_add(ecc_25519_work_t *out, const ecc_25519_work_t *in1, const ecc
 }
 
 /**
- * Does a scalar multiplication of a point of the Elliptic Curve with an integer
+ * Does a scalar multiplication of a point of the Elliptic Curve with an integer of a given bit length
+ *
+ * To speed up scalar multiplication when it is known that not the whole 256 bits of the scalar
+ * are used. The bit length should always be a constant and not computed at runtime to ensure
+ * that no timing attacks are possible.
  *
  * The same pointers may be used for input and output.
  **/
-void ecc_25519_scalarmult(ecc_25519_work_t *out, const ecc_int256_t *n, const ecc_25519_work_t *base) {
+void ecc_25519_scalarmult_bits(ecc_25519_work_t *out, const ecc_int256_t *n, const ecc_25519_work_t *base, unsigned bits) {
 	ecc_25519_work_t Q2, Q2p;
 	ecc_25519_work_t cur = id;
 	int b, pos;
 
-	for (pos = 255; pos >= 0; --pos) {
+	if (bits > 256)
+		bits = 256;
+
+	for (pos = bits - 1; pos >= 0; --pos) {
 		b = n->p[pos / 8] >> (pos & 7);
 		b &= 1;
 
@@ -567,6 +574,15 @@ void ecc_25519_scalarmult(ecc_25519_work_t *out, const ecc_int256_t *n, const ec
 	}
 
 	*out = cur;
+}
+
+/**
+ * Does a scalar multiplication of a point of the Elliptic Curve with an integer
+ *
+ * The same pointers may be used for input and output.
+ **/
+void ecc_25519_scalarmult(ecc_25519_work_t *out, const ecc_int256_t *n, const ecc_25519_work_t *base) {
+	ecc_25519_scalarmult_bits(out, n, base, 256);
 }
 
 /** The ec25519 default base */
@@ -585,6 +601,17 @@ static const ecc_25519_work_t default_base = {
 	 0xc3, 0x29, 0x09, 0x52, 0x78, 0xe9, 0x1e, 0xe4,
 	 0x47, 0x4b, 0x4c, 0x81, 0xa6, 0x02, 0xfd, 0x29}
 };
+
+/**
+ * Does a scalar multiplication of the default base point (generator element) of the Elliptic Curve with an integer of a given bit length
+ *
+ * The order of the base point is \f$ 2^{252} + 27742317777372353535851937790883648493 \f$.
+ *
+ * See the notes about \ref ecc_25519_scalarmult_bits before using this function.
+ */
+void ecc_25519_scalarmult_base_bits(ecc_25519_work_t *out, const ecc_int256_t *n, unsigned bits) {
+	ecc_25519_scalarmult_bits(out, n, &default_base, bits);
+}
 
 /**
  * Does a scalar multiplication of the default base point (generator element) of the Elliptic Curve with an integer
