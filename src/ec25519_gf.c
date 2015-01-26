@@ -271,6 +271,10 @@ void ecc_25519_gf_recip(ecc_int256_t *out, const ecc_int256_t *in) {
 /**
  * Ensures some properties of a Galois field element to make it fit for use as a secret key
  *
+ * This sets the 255th bit and clears the 256th and the bottom three bits (so the key
+ * will be a multiple of 8). See Daniel J. Bernsteins paper "Curve25519: new Diffie-Hellman speed records."
+ * for the rationale of this.
+ *
  * The same pointers may be used for input and output.
  */
 void ecc_25519_gf_sanitize_secret(ecc_int256_t *out, const ecc_int256_t *in) {
