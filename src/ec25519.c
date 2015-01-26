@@ -1,5 +1,5 @@
 /*
-  Copyright (c) 2012, Matthias Schiffer <mschiffer@universe-factory.net>
+  Copyright (c) 2012-2015, Matthias Schiffer <mschiffer@universe-factory.net>
   Partly based on public domain code by Matthew Dempsky and D. J. Bernstein.
   All rights reserved.
 
