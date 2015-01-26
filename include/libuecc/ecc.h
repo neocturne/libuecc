@@ -55,6 +55,9 @@ typedef struct _ecc_25519_work {
  * @{
  */
 
+extern const ecc_25519_work_t ecc_25519_work_identity;
+extern const ecc_25519_work_t ecc_25519_work_default_base;
+
 int ecc_25519_load_xy(ecc_25519_work_t *out, const ecc_int256_t *x, const ecc_int256_t *y);
 void ecc_25519_store_xy(ecc_int256_t *x, ecc_int256_t *y, const ecc_25519_work_t *in);
 
