@@ -498,6 +498,18 @@ int ecc_25519_is_identity(const ecc_25519_work_t *in) {
 	return (check_zero(in->X)&check_zero(Y_Z));
 }
 
+void ecc_25519_negate(ecc_25519_work_t *out, const ecc_25519_work_t *in) {
+	int i;
+
+	for (i = 0; i < 32; i++) {
+		out->Y[i] = in->Y[i];
+		out->Z[i] = in->Z[i];
+	}
+
+	sub(out->X, zero, in->X);
+	sub(out->T, zero, in->T);
+}
+
 void ecc_25519_double(ecc_25519_work_t *out, const ecc_25519_work_t *in) {
 	unsigned int A[32], B[32], C[32], D[32], E[32], F[32], G[32], H[32], t0[32], t1[32], t2[32], t3[32];
 
@@ -540,6 +552,13 @@ void ecc_25519_add(ecc_25519_work_t *out, const ecc_25519_work_t *in1, const ecc
 	mult(out->Y, G, H);
 	mult(out->T, E, H);
 	mult(out->Z, F, G);
+}
+
+void ecc_25519_sub(ecc_25519_work_t *out, const ecc_25519_work_t *in1, const ecc_25519_work_t *in2) {
+	ecc_25519_work_t in2_neg;
+
+	ecc_25519_negate(&in2_neg, in2);
+	ecc_25519_add(out, in1, &in2_neg);
 }
 
 void ecc_25519_scalarmult_bits(ecc_25519_work_t *out, const ecc_int256_t *n, const ecc_25519_work_t *base, unsigned bits) {

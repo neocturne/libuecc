@@ -87,6 +87,13 @@ void ecc_25519_store_packed(ecc_int256_t *out, const ecc_25519_work_t *in);
 int ecc_25519_is_identity(const ecc_25519_work_t *in);
 
 /**
+ * Negates a point of the Elliptic Curve
+ *
+ * The same pointer may be given for input and output
+ */
+void ecc_25519_negate(ecc_25519_work_t *out, const ecc_25519_work_t *in);
+
+/**
  * Doubles a point of the Elliptic Curve
  *
  * ecc_25519_double(out, in) is equivalent to ecc_25519_add(out, in, in), but faster.
@@ -102,6 +109,12 @@ void ecc_25519_double(ecc_25519_work_t *out, const ecc_25519_work_t *in);
  */
 void ecc_25519_add(ecc_25519_work_t *out, const ecc_25519_work_t *in1, const ecc_25519_work_t *in2);
 
+/**
+ * Subtracts two points of the Elliptic Curve
+ *
+ * The same pointers may be given for input and output.
+ */
+void ecc_25519_sub(ecc_25519_work_t *out, const ecc_25519_work_t *in1, const ecc_25519_work_t *in2);
 
 /**
  * Does a scalar multiplication of a point of the Elliptic Curve with an integer of a given bit length
