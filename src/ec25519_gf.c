@@ -25,10 +25,12 @@
 */
 
 /** \file
-  Simple finite field operations on the prime field \f$ F_q \f$ for
-  \f$ q = 2^{252} + 27742317777372353535851937790883648493 \f$, which
-  is the order of the base point used for ec25519
-*/
+ * Simple finite field operations on the prime field \f$ F_q \f$ for
+ * \f$ q = 2^{252} + 27742317777372353535851937790883648493 \f$, which
+ * is the order of the base point used for ec25519
+ *
+ * Doxygen comments for public APIs can be found in the public header file.
+ */
 
 #include <libuecc/ecc.h>
 
@@ -40,11 +42,6 @@
 #define ASR(n,s) (((n) >> s)|(IS_NEGATIVE(n)*((unsigned)-1) << (8*sizeof(n)-s)))
 
 
-/**
- * The order of the prime field
- *
- * The order is \f$ 2^{252} + 27742317777372353535851937790883648493 \f$.
- */
 const ecc_int256_t ecc_25519_gf_order = {{
 	0xed, 0xd3, 0xf5, 0x5c, 0x1a, 0x63, 0x12, 0x58,
 	0xd6, 0x9c, 0xf7, 0xa2, 0xde, 0xf9, 0xde, 0x14,
@@ -70,7 +67,6 @@ static void select(unsigned char out[32], const unsigned char r[32], const unsig
 	}
 }
 
-/** Checks if an integer is equal to zero (after reduction) */
 int ecc_25519_gf_is_zero(const ecc_int256_t *in) {
 	int i;
 	ecc_int256_t r;
@@ -84,11 +80,6 @@ int ecc_25519_gf_is_zero(const ecc_int256_t *in) {
 	return (((bits-1)>>8) & 1);
 }
 
-/**
- * Adds two integers as Galois field elements
- *
- * The same pointers may be used for input and output.
- */
 void ecc_25519_gf_add(ecc_int256_t *out, const ecc_int256_t *in1, const ecc_int256_t *in2) {
 	unsigned int j;
 	unsigned int u;
@@ -103,11 +94,6 @@ void ecc_25519_gf_add(ecc_int256_t *out, const ecc_int256_t *in1, const ecc_int2
 	}
 }
 
-/**
- * Subtracts two integers as Galois field elements
- *
- * The same pointers may be used for input and output.
- */
 void ecc_25519_gf_sub(ecc_int256_t *out, const ecc_int256_t *in1, const ecc_int256_t *in2) {
 	unsigned int j;
 	unsigned int u;
@@ -145,11 +131,6 @@ static void reduce(unsigned char a[32]) {
 	select(a, out1, out2, IS_NEGATIVE(u1));
 }
 
-/**
- * Reduces an integer to a unique representation in the range \f$ [0,q-1] \f$
- *
- * The same pointers may be used for input and output.
- */
 void ecc_25519_gf_reduce(ecc_int256_t *out, const ecc_int256_t *in) {
 	int i;
 
@@ -183,11 +164,6 @@ static void montgomery(unsigned char out[32], const unsigned char a[32], const u
 	}
 }
 
-/**
- * Multiplies two integers as Galois field elements
- *
- * The same pointers may be used for input and output.
- */
 void ecc_25519_gf_mult(ecc_int256_t *out, const ecc_int256_t *in1, const ecc_int256_t *in2) {
 	/* 2^512 mod q */
 	static const unsigned char C[32] = {
@@ -210,11 +186,6 @@ void ecc_25519_gf_mult(ecc_int256_t *out, const ecc_int256_t *in1, const ecc_int
 	montgomery(out->p, R, C);
 }
 
-/**
- * Computes the reciprocal of a Galois field element
- *
- * The same pointers may be used for input and output.
- */
 void ecc_25519_gf_recip(ecc_int256_t *out, const ecc_int256_t *in) {
 	static const unsigned char C[32] = {
 		0x01
@@ -268,15 +239,6 @@ void ecc_25519_gf_recip(ecc_int256_t *out, const ecc_int256_t *in) {
 	montgomery(out->p, R2, C);
 }
 
-/**
- * Ensures some properties of a Galois field element to make it fit for use as a secret key
- *
- * This sets the 255th bit and clears the 256th and the bottom three bits (so the key
- * will be a multiple of 8). See Daniel J. Bernsteins paper "Curve25519: new Diffie-Hellman speed records."
- * for the rationale of this.
- *
- * The same pointers may be used for input and output.
- */
 void ecc_25519_gf_sanitize_secret(ecc_int256_t *out, const ecc_int256_t *in) {
 	int i;
 

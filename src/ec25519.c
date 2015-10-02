@@ -35,16 +35,15 @@
  *
  * See http://hyperelliptic.org/EFD/g1p/auto-twisted-extended.html for add and
  * double operations.
+ *
+ * Doxygen comments for public APIs can be found in the public header file.
  */
 
 #include <libuecc/ecc.h>
 
 
-/** The identity element */
 const ecc_25519_work_t ecc_25519_work_identity = {{0}, {1}, {1}, {0}};
 
-
-/** The ec25519 default base */
 const ecc_25519_work_t ecc_25519_work_default_base = {
 	{0xd4, 0x6b, 0xfe, 0x7f, 0x39, 0xfa, 0x8c, 0x22,
 	 0xe1, 0x96, 0x23, 0xeb, 0x26, 0xb7, 0x8e, 0x6a,
@@ -401,7 +400,6 @@ static void recip(unsigned int out[32], const unsigned int z[32]) {
 	/* 2^255 - 21 */ mult(out, t1, z11);
 }
 
-/** Loads a point with given coordinates into its unpacked representation */
 int ecc_25519_load_xy(ecc_25519_work_t *out, const ecc_int256_t *x, const ecc_int256_t *y) {
 	int i;
 	unsigned int X2[32], Y2[32], aX2[32], dX2[32], dX2Y2[32], aX2_Y2[32], _1_dX2Y2[32], r[32];
@@ -431,13 +429,6 @@ int ecc_25519_load_xy(ecc_25519_work_t *out, const ecc_int256_t *x, const ecc_in
 	return 1;
 }
 
-/**
- * Stores a point's x and y coordinates
- *
- * \param x Returns the x coordinate of the point. May be NULL.
- * \param y Returns the y coordinate of the point. May be NULL.
- * \param in The unpacked point to store.
- */
 void ecc_25519_store_xy(ecc_int256_t *x, ecc_int256_t *y, const ecc_25519_work_t *in) {
 	unsigned int X[32], Y[32], Z[32];
 	int i;
@@ -459,7 +450,6 @@ void ecc_25519_store_xy(ecc_int256_t *x, ecc_int256_t *y, const ecc_25519_work_t
 	}
 }
 
-/** Loads a packed point into its unpacked representation */
 int ecc_25519_load_packed(ecc_25519_work_t *out, const ecc_int256_t *in) {
 	int i;
 	unsigned int X2[32] /* X^2 */, aX2[32] /* aX^2 */, dX2[32] /* dX^2 */, _1_aX2[32] /* 1-aX^2 */, _1_dX2[32] /* 1-aX^2 */;
@@ -492,7 +482,6 @@ int ecc_25519_load_packed(ecc_25519_work_t *out, const ecc_int256_t *in) {
 	return 1;
 }
 
-/** Stores a point into its packed representation */
 void ecc_25519_store_packed(ecc_int256_t *out, const ecc_25519_work_t *in) {
 	ecc_int256_t y;
 
@@ -500,7 +489,6 @@ void ecc_25519_store_packed(ecc_int256_t *out, const ecc_25519_work_t *in) {
 	out->p[31] |= (y.p[0] << 7);
 }
 
-/** Checks if a point is the identity element of the Elliptic Curve group */
 int ecc_25519_is_identity(const ecc_25519_work_t *in) {
 	unsigned int Y_Z[32];
 
@@ -510,13 +498,6 @@ int ecc_25519_is_identity(const ecc_25519_work_t *in) {
 	return (check_zero(in->X)&check_zero(Y_Z));
 }
 
-/**
- * Doubles a point of the Elliptic Curve
- *
- * ecc_25519_double(out, in) is equivalent to ecc_25519_add(out, in, in), but faster.
- *
- * The same pointers may be used for input and output.
- */
 void ecc_25519_double(ecc_25519_work_t *out, const ecc_25519_work_t *in) {
 	unsigned int A[32], B[32], C[32], D[32], E[32], F[32], G[32], H[32], t0[32], t1[32], t2[32], t3[32];
 
@@ -538,11 +519,6 @@ void ecc_25519_double(ecc_25519_work_t *out, const ecc_25519_work_t *in) {
 	mult(out->Z, F, G);
 }
 
-/**
- * Adds two points of the Elliptic Curve
- *
- * The same pointers may be used for input and output.
- */
 void ecc_25519_add(ecc_25519_work_t *out, const ecc_25519_work_t *in1, const ecc_25519_work_t *in2) {
 	unsigned int A[32], B[32], C[32], D[32], E[32], F[32], G[32], H[32], t0[32], t1[32], t2[32], t3[32], t4[32], t5[32];
 
@@ -566,15 +542,6 @@ void ecc_25519_add(ecc_25519_work_t *out, const ecc_25519_work_t *in1, const ecc
 	mult(out->Z, F, G);
 }
 
-/**
- * Does a scalar multiplication of a point of the Elliptic Curve with an integer of a given bit length
- *
- * To speed up scalar multiplication when it is known that not the whole 256 bits of the scalar
- * are used. The bit length should always be a constant and not computed at runtime to ensure
- * that no timing attacks are possible.
- *
- * The same pointers may be used for input and output.
- **/
 void ecc_25519_scalarmult_bits(ecc_25519_work_t *out, const ecc_int256_t *n, const ecc_25519_work_t *base, unsigned bits) {
 	ecc_25519_work_t Q2, Q2p;
 	ecc_25519_work_t cur = ecc_25519_work_identity;
@@ -595,31 +562,14 @@ void ecc_25519_scalarmult_bits(ecc_25519_work_t *out, const ecc_int256_t *n, con
 	*out = cur;
 }
 
-/**
- * Does a scalar multiplication of a point of the Elliptic Curve with an integer
- *
- * The same pointers may be used for input and output.
- **/
 void ecc_25519_scalarmult(ecc_25519_work_t *out, const ecc_int256_t *n, const ecc_25519_work_t *base) {
 	ecc_25519_scalarmult_bits(out, n, base, 256);
 }
 
-/**
- * Does a scalar multiplication of the default base point (generator element) of the Elliptic Curve with an integer of a given bit length
- *
- * The order of the base point is \f$ 2^{252} + 27742317777372353535851937790883648493 \f$.
- *
- * See the notes about \ref ecc_25519_scalarmult_bits before using this function.
- */
 void ecc_25519_scalarmult_base_bits(ecc_25519_work_t *out, const ecc_int256_t *n, unsigned bits) {
 	ecc_25519_scalarmult_bits(out, n, &ecc_25519_work_default_base, bits);
 }
 
-/**
- * Does a scalar multiplication of the default base point (generator element) of the Elliptic Curve with an integer
- *
- * The order of the base point is \f$ 2^{252} + 27742317777372353535851937790883648493 \f$.
- */
 void ecc_25519_scalarmult_base(ecc_25519_work_t *out, const ecc_int256_t *n) {
 	ecc_25519_scalarmult(out, n, &ecc_25519_work_default_base);
 }
