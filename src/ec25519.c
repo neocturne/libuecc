@@ -473,6 +473,7 @@ int ecc_25519_load_packed(ecc_25519_work_t *out, const ecc_int256_t *in) {
 	if (!square_root(Y, Y2))
 		return 0;
 
+	/* No squeeze is necessary for subtractions from zero */
 	sub(Yt, zero, Y);
 
 	select(out->Y, Y, Yt, (in->p[31] >> 7) ^ (Y[0] & 1));
@@ -506,6 +507,7 @@ void ecc_25519_negate(ecc_25519_work_t *out, const ecc_25519_work_t *in) {
 		out->Z[i] = in->Z[i];
 	}
 
+	/* No squeeze is necessary for subtractions from zero */
 	sub(out->X, zero, in->X);
 	sub(out->T, zero, in->T);
 }
