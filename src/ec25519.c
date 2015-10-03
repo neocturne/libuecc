@@ -37,6 +37,10 @@
  * double operations.
  *
  * Doxygen comments for public APIs can be found in the public header file.
+ *
+ * Invariant that must be held by all public API: the components of an
+ * \ref ecc_25519_work_t are always in the range \f$ [0, 2p) \f$.
+ * Integers in this range will be called \em squeezed in the following.
  */
 
 #include <libuecc/ecc.h>
@@ -74,7 +78,11 @@ static void add(unsigned int out[32], const unsigned int a[32], const unsigned i
 	u += a[31] + b[31]; out[31] = u;
 }
 
-/** Subtracts two unpacked integers (modulo p) */
+/**
+ * Subtracts two unpacked integers (modulo p)
+ *
+ * b must be \em squeezed.
+ */
 static void sub(unsigned int out[32], const unsigned int a[32], const unsigned int b[32]) {
 	unsigned int j;
 	unsigned int u;
@@ -88,7 +96,11 @@ static void sub(unsigned int out[32], const unsigned int a[32], const unsigned i
 	out[31] = u;
 }
 
-/** Performs carry and reduce on an unpacked integer */
+/**
+ * Performs carry and reduce on an unpacked integer
+ *
+ * The result is not always fully reduced, but it will be significantly smaller than \f$ 2p \f$.
+ */
 static void squeeze(unsigned int a[32]) {
 	unsigned int j;
 	unsigned int u;
@@ -103,7 +115,7 @@ static void squeeze(unsigned int a[32]) {
 /**
  * Ensures that the output of a previous \ref squeeze is fully reduced
  *
- * After a \ref freeze, only the lower byte of each integer part holds a meaningful value
+ * After a \ref freeze, only the lower byte of each integer part holds a meaningful value.
  */
 static void freeze(unsigned int a[32]) {
 	static const unsigned int minusp[32] = {
@@ -123,7 +135,11 @@ static void freeze(unsigned int a[32]) {
 	for (j = 0; j < 32; j++) a[j] ^= negative & (aorig[j] ^ a[j]);
 }
 
-/** Multiplies two unpacked integers (modulo p) */
+/**
+ * Multiplies two unpacked integers (modulo p)
+ *
+ * The result will be \em squeezed.
+ */
 static void mult(unsigned int out[32], const unsigned int a[32], const unsigned int b[32]) {
 	unsigned int i;
 	unsigned int j;
@@ -138,7 +154,11 @@ static void mult(unsigned int out[32], const unsigned int a[32], const unsigned 
 	squeeze(out);
 }
 
-/** Multiplies an unpacked integer with a small integer (modulo p) */
+/**
+ * Multiplies an unpacked integer with a small integer (modulo p)
+ *
+ * The result will be \em squeezed.
+ */
 static void mult_int(unsigned int out[32], unsigned int n, const unsigned int a[32]) {
 	unsigned int j;
 	unsigned int u;
@@ -151,7 +171,11 @@ static void mult_int(unsigned int out[32], unsigned int n, const unsigned int a[
 	u += out[j]; out[j] = u;
 }
 
-/** Squares an unpacked integer */
+/**
+ * Squares an unpacked integer
+ *
+ * The result will be sqeezed.
+ */
 static void square(unsigned int out[32], const unsigned int a[32]) {
 	unsigned int i;
 	unsigned int j;
@@ -185,9 +209,9 @@ static int check_equal(const unsigned int x[32], const unsigned int y[32]) {
 }
 
 /**
- * Checks if an unpacked integer equals zero
+ * Checks if an unpacked integer equals zero (modulo p)
  *
- * The intergers must be \ref squeeze "squeezed" before.
+ * The interger must be squeezed before.
  */
 static int check_zero(const unsigned int x[32]) {
 	static const unsigned int p[32] = {
@@ -473,7 +497,7 @@ int ecc_25519_load_packed(ecc_25519_work_t *out, const ecc_int256_t *in) {
 	if (!square_root(Y, Y2))
 		return 0;
 
-	/* No squeeze is necessary for subtractions from zero */
+	/* No squeeze is necessary after subtractions from zero if the subtrahend is squeezed */
 	sub(Yt, zero, Y);
 
 	select(out->Y, Y, Yt, (in->p[31] >> 7) ^ (Y[0] & 1));
@@ -507,7 +531,7 @@ void ecc_25519_negate(ecc_25519_work_t *out, const ecc_25519_work_t *in) {
 		out->Z[i] = in->Z[i];
 	}
 
-	/* No squeeze is necessary for subtractions from zero */
+	/* No squeeze is necessary after subtractions from zero if the subtrahend is squeezed */
 	sub(out->X, zero, in->X);
 	sub(out->T, zero, in->T);
 }
