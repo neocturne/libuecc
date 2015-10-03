@@ -187,7 +187,7 @@ static int check_equal(const unsigned int x[32], const unsigned int y[32]) {
 /**
  * Checks if an unpacked integer equals zero
  *
- * The intergers must be must be \ref squeeze "squeezed" before.
+ * The intergers must be \ref squeeze "squeezed" before.
  */
 static int check_zero(const unsigned int x[32]) {
 	static const unsigned int p[32] = {
