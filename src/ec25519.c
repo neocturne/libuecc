@@ -546,9 +546,9 @@ void ecc_25519_double(ecc_25519_work_t *out, const ecc_25519_work_t *in) {
 	mult_int(D, 486664, A);
 	add(t1, in->X, in->Y);
 	square(t2, t1);
-	sub(t3, t2, A); squeeze(t3);
+	sub(t3, t2, A);
 	sub(E, t3, B);
-	add(G, D, B); squeeze(G);
+	add(G, D, B);
 	sub(F, G, C);
 	sub(H, D, B);
 	mult(out->X, E, F);
@@ -568,7 +568,7 @@ void ecc_25519_add(ecc_25519_work_t *out, const ecc_25519_work_t *in1, const ecc
 	add(t1, in1->X, in1->Y);
 	add(t2, in2->X, in2->Y);
 	mult(t3, t1, t2);
-	sub(t4, t3, A); squeeze(t4);
+	sub(t4, t3, A);
 	sub(E, t4, B);
 	sub(F, D, C);
 	add(G, D, C);
