@@ -35,7 +35,7 @@
 #include <libuecc/ecc.h>
 
 
-/** Checks if the highest bit of an unsigned integer is set */
+/** Checks if the highest bit of an uint32_teger is set */
 #define IS_NEGATIVE(n) ((int)((((unsigned)n) >> (8*sizeof(n)-1))&1))
 
 /** Performs an arithmetic right shift */
@@ -50,15 +50,15 @@ const ecc_int256_t ecc_25519_gf_order = {{
 }};
 
 /** An internal alias for \ref ecc_25519_gf_order */
-static const unsigned char *q = ecc_25519_gf_order.p;
+static const uint8_t *q = ecc_25519_gf_order.p;
 
 /**
  * Copies the content of r into out if b == 0, the contents of s if b == 1
  */
-static void select(unsigned char out[32], const unsigned char r[32], const unsigned char s[32], unsigned int b) {
+static void select(uint8_t out[32], const uint8_t r[32], const uint8_t s[32], uint32_t b) {
 	unsigned int j;
-	unsigned int t;
-	unsigned int bminus1;
+	uint8_t t;
+	uint8_t bminus1;
 
 	bminus1 = b - 1;
 	for (j = 0;j < 32;++j) {
@@ -70,7 +70,7 @@ static void select(unsigned char out[32], const unsigned char r[32], const unsig
 int ecc_25519_gf_is_zero(const ecc_int256_t *in) {
 	int i;
 	ecc_int256_t r;
-	unsigned int bits = 0;
+	uint32_t bits = 0;
 
 	ecc_25519_gf_reduce(&r, in);
 
@@ -82,7 +82,7 @@ int ecc_25519_gf_is_zero(const ecc_int256_t *in) {
 
 void ecc_25519_gf_add(ecc_int256_t *out, const ecc_int256_t *in1, const ecc_int256_t *in2) {
 	unsigned int j;
-	unsigned int u;
+	uint32_t u;
 	int nq = 1 - (in1->p[31]>>4) - (in2->p[31]>>4);
 
 	u = 0;
@@ -96,7 +96,7 @@ void ecc_25519_gf_add(ecc_int256_t *out, const ecc_int256_t *in1, const ecc_int2
 
 void ecc_25519_gf_sub(ecc_int256_t *out, const ecc_int256_t *in1, const ecc_int256_t *in2) {
 	unsigned int j;
-	unsigned int u;
+	uint32_t u;
 	int nq = 8 - (in1->p[31]>>4) + (in2->p[31]>>4);
 
 	u = 0;
@@ -109,11 +109,11 @@ void ecc_25519_gf_sub(ecc_int256_t *out, const ecc_int256_t *in1, const ecc_int2
 }
 
 /** Reduces an integer to a unique representation in the range \f$ [0,q-1] \f$ */
-static void reduce(unsigned char a[32]) {
+static void reduce(uint8_t a[32]) {
 	unsigned int j;
-	unsigned int nq = a[31] >> 4;
-	unsigned int u1, u2;
-	unsigned char out1[32], out2[32];
+	uint32_t nq = a[31] >> 4;
+	uint32_t u1, u2;
+	uint8_t out1[32], out2[32];
 
 	u1 = u2 = 0;
 	for (j = 0; j < 31; ++j) {
@@ -141,10 +141,10 @@ void ecc_25519_gf_reduce(ecc_int256_t *out, const ecc_int256_t *in) {
 }
 
 /** Montgomery modular multiplication algorithm */
-static void montgomery(unsigned char out[32], const unsigned char a[32], const unsigned char b[32]) {
+static void montgomery(uint8_t out[32], const uint8_t a[32], const uint8_t b[32]) {
 	unsigned int i, j;
-	unsigned int nq;
-	unsigned int u;
+	uint32_t nq;
+	uint32_t u;
 
 	for (i = 0; i < 32; i++)
 		out[i] = 0;
@@ -166,15 +166,15 @@ static void montgomery(unsigned char out[32], const unsigned char a[32], const u
 
 void ecc_25519_gf_mult(ecc_int256_t *out, const ecc_int256_t *in1, const ecc_int256_t *in2) {
 	/* 2^512 mod q */
-	static const unsigned char C[32] = {
+	static const uint8_t C[32] = {
 		0x01, 0x0f, 0x9c, 0x44, 0xe3, 0x11, 0x06, 0xa4,
 		0x47, 0x93, 0x85, 0x68, 0xa7, 0x1b, 0x0e, 0xd0,
 		0x65, 0xbe, 0xf5, 0x17, 0xd2, 0x73, 0xec, 0xce,
 		0x3d, 0x9a, 0x30, 0x7c, 0x1b, 0x41, 0x99, 0x03
 	};
 
-	unsigned char B[32];
-	unsigned char R[32];
+	uint8_t B[32];
+	uint8_t R[32];
 	unsigned int i;
 
 	for (i = 0; i < 32; i++)
@@ -187,12 +187,12 @@ void ecc_25519_gf_mult(ecc_int256_t *out, const ecc_int256_t *in1, const ecc_int
 }
 
 void ecc_25519_gf_recip(ecc_int256_t *out, const ecc_int256_t *in) {
-	static const unsigned char C[32] = {
+	static const uint8_t C[32] = {
 		0x01
 	};
 
-	unsigned char A[32], B[32];
-	unsigned char R1[32], R2[32];
+	uint8_t A[32], B[32];
+	uint8_t R1[32], R2[32];
 	int use_r2 = 0;
 	unsigned int i, j;
 
@@ -204,7 +204,7 @@ void ecc_25519_gf_recip(ecc_int256_t *out, const ecc_int256_t *in) {
 	reduce(A);
 
 	for (i = 0; i < 32; i++) {
-		unsigned char c;
+		uint8_t c;
 
 		if (i == 0)
 			c = 0xeb; /* q[0] - 2 */

@@ -65,17 +65,25 @@ const ecc_25519_work_t ecc_25519_work_default_base = {
 };
 
 
-static const unsigned int zero[32] = {0};
-static const unsigned int one[32] = {1};
+static const uint32_t zero[32] = {0};
+static const uint32_t one[32] = {1};
 
 
 /** Adds two unpacked integers (modulo p) */
-static void add(unsigned int out[32], const unsigned int a[32], const unsigned int b[32]) {
+static void add(uint32_t out[32], const uint32_t a[32], const uint32_t b[32]) {
 	unsigned int j;
-	unsigned int u;
+	uint32_t u;
+
 	u = 0;
-	for (j = 0;j < 31;++j) { u += a[j] + b[j]; out[j] = u & 255; u >>= 8; }
-	u += a[31] + b[31]; out[31] = u;
+
+	for (j = 0; j < 31; j++) {
+		u += a[j] + b[j];
+		out[j] = u & 255;
+		u >>= 8;
+	}
+
+	u += a[31] + b[31];
+	out[31] = u;
 }
 
 /**
@@ -83,15 +91,18 @@ static void add(unsigned int out[32], const unsigned int a[32], const unsigned i
  *
  * b must be \em squeezed.
  */
-static void sub(unsigned int out[32], const unsigned int a[32], const unsigned int b[32]) {
+static void sub(uint32_t out[32], const uint32_t a[32], const uint32_t b[32]) {
 	unsigned int j;
-	unsigned int u;
+	uint32_t u;
+
 	u = 218;
+
 	for (j = 0;j < 31;++j) {
-		u += a[j] + 65280 - b[j];
+		u += a[j] + UINT32_C(65280) - b[j];
 		out[j] = u & 255;
 		u >>= 8;
 	}
+
 	u += a[31] - b[31];
 	out[31] = u;
 }
@@ -101,15 +112,30 @@ static void sub(unsigned int out[32], const unsigned int a[32], const unsigned i
  *
  * The result is not always fully reduced, but it will be significantly smaller than \f$ 2p \f$.
  */
-static void squeeze(unsigned int a[32]) {
+static void squeeze(uint32_t a[32]) {
 	unsigned int j;
-	unsigned int u;
+	uint32_t u;
+
 	u = 0;
-	for (j = 0;j < 31;++j) { u += a[j]; a[j] = u & 255; u >>= 8; }
-	u += a[31]; a[31] = u & 127;
+
+	for (j = 0;j < 31;++j) {
+		u += a[j];
+		a[j] = u & 255;
+		u >>= 8;
+	}
+
+	u += a[31];
+	a[31] = u & 127;
 	u = 19 * (u >> 7);
-	for (j = 0;j < 31;++j) { u += a[j]; a[j] = u & 255; u >>= 8; }
-	u += a[31]; a[31] = u;
+
+	for (j = 0;j < 31;++j) {
+		u += a[j];
+		a[j] = u & 255;
+		u >>= 8;
+	}
+
+	u += a[31];
+	a[31] = u;
 }
 
 /**
@@ -117,22 +143,25 @@ static void squeeze(unsigned int a[32]) {
  *
  * After a \ref freeze, only the lower byte of each integer part holds a meaningful value.
  */
-static void freeze(unsigned int a[32]) {
-	static const unsigned int minusp[32] = {
+static void freeze(uint32_t a[32]) {
+	static const uint32_t minusp[32] = {
 		19, 0, 0, 0, 0, 0, 0, 0,
 		0, 0, 0, 0, 0, 0, 0, 0,
 		0, 0, 0, 0, 0, 0, 0, 0,
 		0, 0, 0, 0, 0, 0, 0, 128
 	};
 
-	unsigned int aorig[32];
+	uint32_t aorig[32];
 	unsigned int j;
-	unsigned int negative;
+	uint32_t negative;
 
-	for (j = 0; j < 32; j++) aorig[j] = a[j];
+	for (j = 0; j < 32; j++)
+		aorig[j] = a[j];
 	add(a, a, minusp);
 	negative = -((a[31] >> 7) & 1);
-	for (j = 0; j < 32; j++) a[j] ^= negative & (aorig[j] ^ a[j]);
+
+	for (j = 0; j < 32; j++)
+		a[j] ^= negative & (aorig[j] ^ a[j]);
 }
 
 /**
@@ -140,17 +169,22 @@ static void freeze(unsigned int a[32]) {
  *
  * The result will be \em squeezed.
  */
-static void mult(unsigned int out[32], const unsigned int a[32], const unsigned int b[32]) {
-	unsigned int i;
-	unsigned int j;
-	unsigned int u;
+static void mult(uint32_t out[32], const uint32_t a[32], const uint32_t b[32]) {
+	unsigned int i, j;
+	uint32_t u;
 
 	for (i = 0; i < 32; ++i) {
 		u = 0;
-		for (j = 0;j <= i;++j) u += a[j] * b[i - j];
-		for (j = i + 1;j < 32;++j) u += 38 * a[j] * b[i + 32 - j];
+
+		for (j = 0; j <= i; j++)
+			u += a[j] * b[i - j];
+
+		for (j = i + 1; j < 32; j++)
+			u += 38 * a[j] * b[i + 32 - j];
+
 		out[i] = u;
 	}
+
 	squeeze(out);
 }
 
@@ -159,16 +193,29 @@ static void mult(unsigned int out[32], const unsigned int a[32], const unsigned 
  *
  * The result will be \em squeezed.
  */
-static void mult_int(unsigned int out[32], unsigned int n, const unsigned int a[32]) {
+static void mult_int(uint32_t out[32], uint32_t n, const uint32_t a[32]) {
 	unsigned int j;
-	unsigned int u;
+	uint32_t u;
 
 	u = 0;
-	for (j = 0;j < 31;++j) { u += n * a[j]; out[j] = u & 255; u >>= 8; }
+
+	for (j = 0; j < 31; j++) {
+		u += n * a[j];
+		out[j] = u & 255;
+		u >>= 8;
+	}
+
 	u += n * a[31]; out[31] = u & 127;
 	u = 19 * (u >> 7);
-	for (j = 0;j < 31;++j) { u += out[j]; out[j] = u & 255; u >>= 8; }
-	u += out[j]; out[j] = u;
+
+	for (j = 0; j < 31; j++) {
+		u += out[j];
+		out[j] = u & 255;
+		u >>= 8;
+	}
+
+	u += out[j];
+	out[j] = u;
 }
 
 /**
@@ -176,28 +223,35 @@ static void mult_int(unsigned int out[32], unsigned int n, const unsigned int a[
  *
  * The result will be sqeezed.
  */
-static void square(unsigned int out[32], const unsigned int a[32]) {
-	unsigned int i;
-	unsigned int j;
-	unsigned int u;
+static void square(uint32_t out[32], const uint32_t a[32]) {
+	unsigned int i, j;
+	uint32_t u;
 
-	for (i = 0; i < 32; ++i) {
+	for (i = 0; i < 32; i++) {
 		u = 0;
-		for (j = 0;j < i - j;++j) u += a[j] * a[i - j];
-		for (j = i + 1;j < i + 32 - j;++j) u += 38 * a[j] * a[i + 32 - j];
+
+		for (j = 0; j < i - j; j++)
+			u += a[j] * a[i - j];
+
+		for (j = i + 1; j < i + 32 - j; j++)
+			u += 38 * a[j] * a[i + 32 - j];
+
 		u *= 2;
+
 		if ((i & 1) == 0) {
 			u += a[i / 2] * a[i / 2];
 			u += 38 * a[i / 2 + 16] * a[i / 2 + 16];
 		}
+
 		out[i] = u;
 	}
+
 	squeeze(out);
 }
 
 /** Checks for the equality of two unpacked integers */
-static int check_equal(const unsigned int x[32], const unsigned int y[32]) {
-	unsigned int differentbits = 0;
+static int check_equal(const uint32_t x[32], const uint32_t y[32]) {
+	uint32_t differentbits = 0;
 	int i;
 
 	for (i = 0; i < 32; i++) {
@@ -213,8 +267,8 @@ static int check_equal(const unsigned int x[32], const unsigned int y[32]) {
  *
  * The interger must be squeezed before.
  */
-static int check_zero(const unsigned int x[32]) {
-	static const unsigned int p[32] = {
+static int check_zero(const uint32_t x[32]) {
+	static const uint32_t p[32] = {
 		0xed, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
 		0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
 		0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
@@ -225,10 +279,10 @@ static int check_zero(const unsigned int x[32]) {
 }
 
 /** Copies r to out when b == 0, s when b == 1 */
-static void selectw(ecc_25519_work_t *out, const ecc_25519_work_t *r, const ecc_25519_work_t *s, unsigned int b) {
+static void selectw(ecc_25519_work_t *out, const ecc_25519_work_t *r, const ecc_25519_work_t *s, uint32_t b) {
 	unsigned int j;
-	unsigned int t;
-	unsigned int bminus1;
+	uint32_t t;
+	uint32_t bminus1;
 
 	bminus1 = b - 1;
 	for (j = 0; j < 32; ++j) {
@@ -247,10 +301,10 @@ static void selectw(ecc_25519_work_t *out, const ecc_25519_work_t *r, const ecc_
 }
 
 /** Copies r to out when b == 0, s when b == 1 */
-static void select(unsigned int out[32], const unsigned int r[32], const unsigned int s[32], unsigned int b) {
+static void select(uint32_t out[32], const uint32_t r[32], const uint32_t s[32], uint32_t b) {
 	unsigned int j;
-	unsigned int t;
-	unsigned int bminus1;
+	uint32_t t;
+	uint32_t bminus1;
 
 	bminus1 = b - 1;
 	for (j = 0;j < 32;++j) {
@@ -264,15 +318,15 @@ static void select(unsigned int out[32], const unsigned int r[32], const unsigne
  *
  * If the given integer has no square root, 0 is returned, 1 otherwise.
  */
-static int square_root(unsigned int out[32], const unsigned int z[32]) {
-	static const unsigned int minus1[32] = {
+static int square_root(uint32_t out[32], const uint32_t z[32]) {
+	static const uint32_t minus1[32] = {
 		0xec, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
 		0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
 		0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
 		0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x7f
 	};
 
-	static const unsigned int rho_s[32] = {
+	static const uint32_t rho_s[32] = {
 		0xb0, 0xa0, 0x0e, 0x4a, 0x27, 0x1b, 0xee, 0xc4,
 		0x78, 0xe4, 0x2f, 0xad, 0x06, 0x18, 0x43, 0x2f,
 		0xa7, 0xd7, 0xfb, 0x3d, 0x99, 0x00, 0x4d, 0x2b,
@@ -281,18 +335,18 @@ static int square_root(unsigned int out[32], const unsigned int z[32]) {
 
 	/* raise z to power (2^252-2), check if power (2^253-5) equals -1 */
 
-	unsigned int z2[32];
-	unsigned int z9[32];
-	unsigned int z11[32];
-	unsigned int z2_5_0[32];
-	unsigned int z2_10_0[32];
-	unsigned int z2_20_0[32];
-	unsigned int z2_50_0[32];
-	unsigned int z2_100_0[32];
-	unsigned int t0[32];
-	unsigned int t1[32];
-	unsigned int z2_252_1[32];
-	unsigned int z2_252_1_rho_s[32];
+	uint32_t z2[32];
+	uint32_t z9[32];
+	uint32_t z11[32];
+	uint32_t z2_5_0[32];
+	uint32_t z2_10_0[32];
+	uint32_t z2_20_0[32];
+	uint32_t z2_50_0[32];
+	uint32_t z2_100_0[32];
+	uint32_t t0[32];
+	uint32_t t1[32];
+	uint32_t z2_252_1[32];
+	uint32_t z2_252_1_rho_s[32];
 	int i;
 
 	/* 2 */ square(z2, z);
@@ -358,17 +412,17 @@ static int square_root(unsigned int out[32], const unsigned int z[32]) {
 }
 
 /** Computes the reciprocal of an unpacked integer (in the prime field modulo p) */
-static void recip(unsigned int out[32], const unsigned int z[32]) {
-	unsigned int z2[32];
-	unsigned int z9[32];
-	unsigned int z11[32];
-	unsigned int z2_5_0[32];
-	unsigned int z2_10_0[32];
-	unsigned int z2_20_0[32];
-	unsigned int z2_50_0[32];
-	unsigned int z2_100_0[32];
-	unsigned int t0[32];
-	unsigned int t1[32];
+static void recip(uint32_t out[32], const uint32_t z[32]) {
+	uint32_t z2[32];
+	uint32_t z9[32];
+	uint32_t z11[32];
+	uint32_t z2_5_0[32];
+	uint32_t z2_10_0[32];
+	uint32_t z2_20_0[32];
+	uint32_t z2_50_0[32];
+	uint32_t z2_100_0[32];
+	uint32_t t0[32];
+	uint32_t t1[32];
 	int i;
 
 	/* 2 */ square(z2, z);
@@ -426,7 +480,7 @@ static void recip(unsigned int out[32], const unsigned int z[32]) {
 
 int ecc_25519_load_xy(ecc_25519_work_t *out, const ecc_int256_t *x, const ecc_int256_t *y) {
 	int i;
-	unsigned int X2[32], Y2[32], aX2[32], dX2[32], dX2Y2[32], aX2_Y2[32], _1_dX2Y2[32], r[32];
+	uint32_t X2[32], Y2[32], aX2[32], dX2[32], dX2Y2[32], aX2_Y2[32], _1_dX2Y2[32], r[32];
 
 	for (i = 0; i < 32; i++) {
 		out->X[i] = x->p[i];
@@ -437,8 +491,8 @@ int ecc_25519_load_xy(ecc_25519_work_t *out, const ecc_int256_t *x, const ecc_in
 	/* Check validity */
 	square(X2, out->X);
 	square(Y2, out->Y);
-	mult_int(aX2, 486664, X2);
-	mult_int(dX2, 486660, X2);
+	mult_int(aX2, UINT32_C(486664), X2);
+	mult_int(dX2, UINT32_C(486660), X2);
 	mult(dX2Y2, dX2, Y2);
 	add(aX2_Y2, aX2, Y2);
 	add(_1_dX2Y2, one, dX2Y2);
@@ -454,7 +508,7 @@ int ecc_25519_load_xy(ecc_25519_work_t *out, const ecc_int256_t *x, const ecc_in
 }
 
 void ecc_25519_store_xy(ecc_int256_t *x, ecc_int256_t *y, const ecc_25519_work_t *in) {
-	unsigned int X[32], Y[32], Z[32];
+	uint32_t X[32], Y[32], Z[32];
 	int i;
 
 	recip(Z, in->Z);
@@ -476,8 +530,8 @@ void ecc_25519_store_xy(ecc_int256_t *x, ecc_int256_t *y, const ecc_25519_work_t
 
 int ecc_25519_load_packed(ecc_25519_work_t *out, const ecc_int256_t *in) {
 	int i;
-	unsigned int X2[32] /* X^2 */, aX2[32] /* aX^2 */, dX2[32] /* dX^2 */, _1_aX2[32] /* 1-aX^2 */, _1_dX2[32] /* 1-aX^2 */;
-	unsigned int _1_1_dX2[32]  /* 1/(1-aX^2) */, Y2[32] /* Y^2 */, Y[32], Yt[32];
+	uint32_t X2[32] /* X^2 */, aX2[32] /* aX^2 */, dX2[32] /* dX^2 */, _1_aX2[32] /* 1-aX^2 */, _1_dX2[32] /* 1-aX^2 */;
+	uint32_t _1_1_dX2[32]  /* 1/(1-aX^2) */, Y2[32] /* Y^2 */, Y[32], Yt[32];
 
 	for (i = 0; i < 32; i++) {
 		out->X[i] = in->p[i];
@@ -487,8 +541,8 @@ int ecc_25519_load_packed(ecc_25519_work_t *out, const ecc_int256_t *in) {
 	out->X[31] &= 0x7f;
 
 	square(X2, out->X);
-	mult_int(aX2, 486664, X2);
-	mult_int(dX2, 486660, X2);
+	mult_int(aX2, UINT32_C(486664), X2);
+	mult_int(dX2, UINT32_C(486660), X2);
 	sub(_1_aX2, one, aX2);
 	sub(_1_dX2, one, dX2);
 	recip(_1_1_dX2, _1_dX2);
@@ -515,7 +569,7 @@ void ecc_25519_store_packed(ecc_int256_t *out, const ecc_25519_work_t *in) {
 }
 
 int ecc_25519_is_identity(const ecc_25519_work_t *in) {
-	unsigned int Y_Z[32];
+	uint32_t Y_Z[32];
 
 	sub(Y_Z, in->Y, in->Z);
 	squeeze(Y_Z);
@@ -537,13 +591,13 @@ void ecc_25519_negate(ecc_25519_work_t *out, const ecc_25519_work_t *in) {
 }
 
 void ecc_25519_double(ecc_25519_work_t *out, const ecc_25519_work_t *in) {
-	unsigned int A[32], B[32], C[32], D[32], E[32], F[32], G[32], H[32], t0[32], t1[32], t2[32], t3[32];
+	uint32_t A[32], B[32], C[32], D[32], E[32], F[32], G[32], H[32], t0[32], t1[32], t2[32], t3[32];
 
 	square(A, in->X);
 	square(B, in->Y);
 	square(t0, in->Z);
 	mult_int(C, 2, t0);
-	mult_int(D, 486664, A);
+	mult_int(D, UINT32_C(486664), A);
 	add(t1, in->X, in->Y);
 	square(t2, t1);
 	sub(t3, t2, A);
@@ -558,11 +612,11 @@ void ecc_25519_double(ecc_25519_work_t *out, const ecc_25519_work_t *in) {
 }
 
 void ecc_25519_add(ecc_25519_work_t *out, const ecc_25519_work_t *in1, const ecc_25519_work_t *in2) {
-	unsigned int A[32], B[32], C[32], D[32], E[32], F[32], G[32], H[32], t0[32], t1[32], t2[32], t3[32], t4[32], t5[32];
+	uint32_t A[32], B[32], C[32], D[32], E[32], F[32], G[32], H[32], t0[32], t1[32], t2[32], t3[32], t4[32], t5[32];
 
 	mult(A, in1->X, in2->X);
 	mult(B, in1->Y, in2->Y);
-	mult_int(t0, 486660, in2->T);
+	mult_int(t0, UINT32_C(486660), in2->T);
 	mult(C, in1->T, t0);
 	mult(D, in1->Z, in2->Z);
 	add(t1, in1->X, in1->Y);
@@ -572,7 +626,7 @@ void ecc_25519_add(ecc_25519_work_t *out, const ecc_25519_work_t *in1, const ecc
 	sub(E, t4, B);
 	sub(F, D, C);
 	add(G, D, C);
-	mult_int(t5, 486664, A);
+	mult_int(t5, UINT32_C(486664), A);
 	sub(H, B, t5);
 	mult(out->X, E, F);
 	mult(out->Y, G, H);

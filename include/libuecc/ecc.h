@@ -27,6 +27,9 @@
 #ifndef _LIBUECC_ECC_H_
 #define _LIBUECC_ECC_H_
 
+#include <stdint.h>
+
+
 /**
  * A 256 bit integer
  *
@@ -34,7 +37,7 @@
  */
 typedef union _ecc_int256 {
 	/** Data bytes */
-	unsigned char p[32];
+	uint8_t p[32];
 } ecc_int256_t;
 
 /**
@@ -44,10 +47,10 @@ typedef union _ecc_int256 {
  * it should always be packed.
  */
 typedef struct _ecc_25519_work {
-	unsigned int X[32];
-	unsigned int Y[32];
-	unsigned int Z[32];
-	unsigned int T[32];
+	uint32_t X[32];
+	uint32_t Y[32];
+	uint32_t Z[32];
+	uint32_t T[32];
 } ecc_25519_work_t;
 
 /**
