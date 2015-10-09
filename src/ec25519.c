@@ -265,7 +265,7 @@ static int check_equal(const uint32_t x[32], const uint32_t y[32]) {
 /**
  * Checks if an unpacked integer equals zero (modulo p)
  *
- * The interger must be squeezed before.
+ * The integer must be squeezed before.
  */
 static int check_zero(const uint32_t x[32]) {
 	static const uint32_t p[32] = {
