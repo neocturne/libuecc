@@ -524,7 +524,7 @@ static void recip(uint32_t out[32], const uint32_t z[32]) {
 	/* 2^255 - 21 */ mult(out, t1, z11);
 }
 
-int ecc_25519_load_xy(ecc_25519_work_t *out, const ecc_int256_t *x, const ecc_int256_t *y) {
+int ecc_25519_load_xy_legacy(ecc_25519_work_t *out, const ecc_int256_t *x, const ecc_int256_t *y) {
 	int i;
 	uint32_t X2[32], Y2[32], aX2[32], dX2[32], dX2Y2[32], aX2_Y2[32], _1_dX2Y2[32], r[32];
 
@@ -553,7 +553,12 @@ int ecc_25519_load_xy(ecc_25519_work_t *out, const ecc_int256_t *x, const ecc_in
 	return 1;
 }
 
-void ecc_25519_store_xy(ecc_int256_t *x, ecc_int256_t *y, const ecc_25519_work_t *in) {
+int ecc_25519_load_xy(ecc_25519_work_t *out, const ecc_int256_t *x, const ecc_int256_t *y) {
+	return ecc_25519_load_xy_legacy(out, x, y);
+}
+
+
+void ecc_25519_store_xy_legacy(ecc_int256_t *x, ecc_int256_t *y, const ecc_25519_work_t *in) {
 	uint32_t X[32], Y[32], Z[32];
 	int i;
 
@@ -574,7 +579,12 @@ void ecc_25519_store_xy(ecc_int256_t *x, ecc_int256_t *y, const ecc_25519_work_t
 	}
 }
 
-int ecc_25519_load_packed(ecc_25519_work_t *out, const ecc_int256_t *in) {
+void ecc_25519_store_xy(ecc_int256_t *x, ecc_int256_t *y, const ecc_25519_work_t *in) {
+	ecc_25519_store_xy_legacy(x, y, in);
+}
+
+
+int ecc_25519_load_packed_legacy(ecc_25519_work_t *out, const ecc_int256_t *in) {
 	int i;
 	uint32_t X2[32] /* X^2 */, aX2[32] /* aX^2 */, dX2[32] /* dX^2 */, _1_aX2[32] /* 1-aX^2 */, _1_dX2[32] /* 1-aX^2 */;
 	uint32_t _1_1_dX2[32]  /* 1/(1-aX^2) */, Y2[32] /* Y^2 */, Y[32], Yt[32];
@@ -607,12 +617,22 @@ int ecc_25519_load_packed(ecc_25519_work_t *out, const ecc_int256_t *in) {
 	return 1;
 }
 
-void ecc_25519_store_packed(ecc_int256_t *out, const ecc_25519_work_t *in) {
+int ecc_25519_load_packed(ecc_25519_work_t *out, const ecc_int256_t *in) {
+	return ecc_25519_load_packed_legacy(out, in);
+}
+
+
+void ecc_25519_store_packed_legacy(ecc_int256_t *out, const ecc_25519_work_t *in) {
 	ecc_int256_t y;
 
-	ecc_25519_store_xy(out, &y, in);
+	ecc_25519_store_xy_legacy(out, &y, in);
 	out->p[31] |= (y.p[0] << 7);
 }
+
+void ecc_25519_store_packed(ecc_int256_t *out, const ecc_25519_work_t *in) {
+	ecc_25519_store_packed_legacy(out, in);
+}
+
 
 int ecc_25519_is_identity(const ecc_25519_work_t *in) {
 	uint32_t Y_Z[32];

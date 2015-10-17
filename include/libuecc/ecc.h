@@ -99,7 +99,15 @@ DEPRECATED extern const ecc_25519_work_t ecc_25519_work_default_base;
 
 
 /** Loads a point with given coordinates into its unpacked representation */
-int ecc_25519_load_xy(ecc_25519_work_t *out, const ecc_int256_t *x, const ecc_int256_t *y);
+int ecc_25519_load_xy_legacy(ecc_25519_work_t *out, const ecc_int256_t *x, const ecc_int256_t *y);
+
+/**
+ * Loads a point with given coordinates into its unpacked representation
+ *
+ * \deprecated Use \ref ecc_25519_load_xy_legacy
+ */
+DEPRECATED int ecc_25519_load_xy(ecc_25519_work_t *out, const ecc_int256_t *x, const ecc_int256_t *y);
+
 
 /**
  * Stores a point's x and y coordinates
@@ -108,14 +116,40 @@ int ecc_25519_load_xy(ecc_25519_work_t *out, const ecc_int256_t *x, const ecc_in
  * \param y Returns the y coordinate of the point. May be NULL.
  * \param in The unpacked point to store.
  */
-void ecc_25519_store_xy(ecc_int256_t *x, ecc_int256_t *y, const ecc_25519_work_t *in);
+void ecc_25519_store_xy_legacy(ecc_int256_t *x, ecc_int256_t *y, const ecc_25519_work_t *in);
+
+/**
+ * Stores a point's x and y coordinates
+ *
+ * \param x Returns the x coordinate of the point. May be NULL.
+ * \param y Returns the y coordinate of the point. May be NULL.
+ * \param in The unpacked point to store.
+ *
+ * \deprecated Use \ref ecc_25519_store_xy_legacy
+ */
+DEPRECATED void ecc_25519_store_xy(ecc_int256_t *x, ecc_int256_t *y, const ecc_25519_work_t *in);
 
 
 /** Loads a packed point into its unpacked representation */
-int ecc_25519_load_packed(ecc_25519_work_t *out, const ecc_int256_t *in);
+int ecc_25519_load_packed_legacy(ecc_25519_work_t *out, const ecc_int256_t *in);
+
+/**
+ * Loads a packed point into its unpacked representation
+ *
+ * \deprecated Use \ref ecc_25519_load_packed_legacy
+ */
+DEPRECATED int ecc_25519_load_packed(ecc_25519_work_t *out, const ecc_int256_t *in);
+
 
 /** Stores a point into its packed representation */
-void ecc_25519_store_packed(ecc_int256_t *out, const ecc_25519_work_t *in);
+void ecc_25519_store_packed_legacy(ecc_int256_t *out, const ecc_25519_work_t *in);
+
+/**
+ * Stores a point into its packed representation
+ *
+ * \deprecated Use \ref ecc_25519_store_packed_legacy
+ */
+DEPRECATED void ecc_25519_store_packed(ecc_int256_t *out, const ecc_25519_work_t *in);
 
 
 /** Checks if a point is the identity element of the Elliptic Curve group */
