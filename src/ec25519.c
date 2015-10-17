@@ -138,19 +138,20 @@ static void squeeze(uint32_t a[32]) {
 	a[31] = u;
 }
 
+
+static const uint32_t minusp[32] = {
+	19, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 128
+};
+
 /**
  * Ensures that the output of a previous \ref squeeze is fully reduced
  *
  * After a \ref freeze, only the lower byte of each integer part holds a meaningful value.
  */
 static void freeze(uint32_t a[32]) {
-	static const uint32_t minusp[32] = {
-		19, 0, 0, 0, 0, 0, 0, 0,
-		0, 0, 0, 0, 0, 0, 0, 0,
-		0, 0, 0, 0, 0, 0, 0, 0,
-		0, 0, 0, 0, 0, 0, 0, 128
-	};
-
 	uint32_t aorig[32];
 	unsigned int j;
 	uint32_t negative;
@@ -162,6 +163,18 @@ static void freeze(uint32_t a[32]) {
 
 	for (j = 0; j < 32; j++)
 		a[j] ^= negative & (aorig[j] ^ a[j]);
+}
+
+/**
+ * Returns the parity (lowest bit of the fully reduced value) of a
+ *
+ * The input must be \em squeezed.
+ */
+static int parity(uint32_t a[32]) {
+	uint32_t b[32];
+
+	add(b, a, minusp);
+	return (a[0] ^ (b[31] >> 7) ^ 1) & 1;
 }
 
 /**
@@ -554,7 +567,7 @@ int ecc_25519_load_packed(ecc_25519_work_t *out, const ecc_int256_t *in) {
 	/* No squeeze is necessary after subtractions from zero if the subtrahend is squeezed */
 	sub(Yt, zero, Y);
 
-	select(out->Y, Y, Yt, (in->p[31] >> 7) ^ (Y[0] & 1));
+	select(out->Y, Y, Yt, (in->p[31] >> 7) ^ parity(Y));
 
 	mult(out->T, out->X, out->Y);
 
