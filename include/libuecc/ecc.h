@@ -97,12 +97,18 @@ extern const ecc_25519_work_t ecc_25519_work_base_legacy;
 DEPRECATED extern const ecc_25519_work_t ecc_25519_work_default_base;
 
 
+/** Loads a point of the Ed25519 curve with given coordinates into its unpacked representation */
+int ecc_25519_load_xy_ed25519(ecc_25519_work_t *out, const ecc_int256_t *x, const ecc_int256_t *y);
 
-/** Loads a point with given coordinates into its unpacked representation */
+/**
+ * Loads a point of the legacy curve with given coordinates into its unpacked representation
+ *
+ * New software should use \ref ecc_25519_load_xy_ed25519, which uses the same curve as the Ed25519 algorithm.
+ */
 int ecc_25519_load_xy_legacy(ecc_25519_work_t *out, const ecc_int256_t *x, const ecc_int256_t *y);
 
 /**
- * Loads a point with given coordinates into its unpacked representation
+ * Loads a point of the legacy curve with given coordinates into its unpacked representation
  *
  * \deprecated Use \ref ecc_25519_load_xy_legacy
  */
@@ -110,7 +116,18 @@ DEPRECATED int ecc_25519_load_xy(ecc_25519_work_t *out, const ecc_int256_t *x, c
 
 
 /**
- * Stores a point's x and y coordinates
+ * Stores the x and y coordinates of a point of the Ed25519 curve
+ *
+ * \param x Returns the x coordinate of the point. May be NULL.
+ * \param y Returns the y coordinate of the point. May be NULL.
+ * \param in The unpacked point to store.
+ */
+void ecc_25519_store_xy_ed25519(ecc_int256_t *x, ecc_int256_t *y, const ecc_25519_work_t *in);
+
+/**
+ * Stores the x and y coordinates of a point of the legacy curve
+ *
+ * New software should use \ref ecc_25519_store_xy_ed25519, which uses the same curve as the Ed25519 algorithm.
  *
  * \param x Returns the x coordinate of the point. May be NULL.
  * \param y Returns the y coordinate of the point. May be NULL.
@@ -130,22 +147,52 @@ void ecc_25519_store_xy_legacy(ecc_int256_t *x, ecc_int256_t *y, const ecc_25519
 DEPRECATED void ecc_25519_store_xy(ecc_int256_t *x, ecc_int256_t *y, const ecc_25519_work_t *in);
 
 
-/** Loads a packed point into its unpacked representation */
+/**
+ * Loads a packed point of the Ed25519 curve into its unpacked representation
+ *
+ * The packed format is different from the legacy one: the legacy format contains that X coordinate and the parity of the Y coordinate,
+ * Ed25519 uses the Y coordinate and the parity of the X coordinate.
+*/
+int ecc_25519_load_packed_ed25519(ecc_25519_work_t *out, const ecc_int256_t *in);
+
+/**
+ * Loads a packed point of the legacy curve into its unpacked representation
+ *
+ * New software should use \ref ecc_25519_load_packed_ed25519, which uses the same curve and packed representation as the Ed25519 algorithm.
+ *
+ * The packed format is different from the Ed25519 one: the legacy format contains that X coordinate and the parity of the Y coordinate,
+ * Ed25519 uses the Y coordinate and the parity of the X coordinate.
+ */
 int ecc_25519_load_packed_legacy(ecc_25519_work_t *out, const ecc_int256_t *in);
 
 /**
- * Loads a packed point into its unpacked representation
+ * Loads a packed point of the legacy curve into its unpacked representation
  *
  * \deprecated Use \ref ecc_25519_load_packed_legacy
  */
 DEPRECATED int ecc_25519_load_packed(ecc_25519_work_t *out, const ecc_int256_t *in);
 
 
-/** Stores a point into its packed representation */
+/**
+ * Stores a point of the Ed25519 curve into its packed representation
+ *
+ * The packed format is different from the Ed25519 one: the legacy format contains that X coordinate and the parity of the Y coordinate,
+ * Ed25519 uses the Y coordinate and the parity of the X coordinate.
+ */
+void ecc_25519_store_packed_ed25519(ecc_int256_t *out, const ecc_25519_work_t *in);
+
+/**
+ * Stores a point of the legacy curve into its packed representation
+ *
+ * New software should use \ref ecc_25519_store_packed_ed25519, which uses the same curve and packed representation as the Ed25519 algorithm.
+ *
+ * The packed format is different from the Ed25519 one: the legacy format contains that X coordinate and the parity of the Y coordinate,
+ * Ed25519 uses the Y coordinate and the parity of the X coordinate.
+ */
 void ecc_25519_store_packed_legacy(ecc_int256_t *out, const ecc_25519_work_t *in);
 
 /**
- * Stores a point into its packed representation
+ * Stores a point of the legacy curve into its packed representation
  *
  * \deprecated Use \ref ecc_25519_store_packed_legacy
  */

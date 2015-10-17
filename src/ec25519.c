@@ -25,12 +25,25 @@
 */
 
 /** \file
- * EC group operations for Twisted Edwards Curve \f$ ax^2 + y^2 = 1 + dx^2y^2 \f$ with
- *    \f$ a = 486664 \f$ and
- *    \f$ d = 486660 \f$
+ * EC group operations for Twisted Edwards Curve \f$ ax^2 + y^2 = 1 + dx^2y^2 \f$
  * on prime field \f$ p = 2^{255} - 19 \f$.
  *
- * The curve is equivalent to the Montgomery Curve used in D. J. Bernstein's
+ * Two different (isomorphic) sets of curve parameters are supported:
+ *
+ *    \f$ a = 486664 \f$ and
+ *    \f$ d = 486660 \f$
+ * are the parameters used by the original libuecc implementation (till v5).
+ * To use points on this curve, use the functions with the suffix \em legacy.
+ *
+ * The other supported curve uses the parameters
+ *    \f$ a = -1 \f$ and
+ *    \f$ d = -(121665/121666) \f$,
+ * which is the curve used by the Ed25519 algorithm. The functions for this curve
+ * have the suffix \em ed25519.
+ *
+ * Internally, libuecc always uses the former representation for its \em work structure.
+ *
+ * The curves are equivalent to the Montgomery Curve used in D. J. Bernstein's
  * Curve25519 Diffie-Hellman algorithm.
  *
  * See http://hyperelliptic.org/EFD/g1p/auto-twisted-extended.html for add and
@@ -100,6 +113,23 @@ const ecc_25519_work_t ecc_25519_work_base_ed25519 = {
 
 static const uint32_t zero[32] = {0};
 static const uint32_t one[32] = {1};
+
+
+/** Factor to multiply the X coordinate with to convert from the legacy to the Ed25519 curve */
+static const uint32_t legacy_to_ed25519[32] = {
+	0x06, 0x7e, 0x45, 0xff, 0xaa, 0x04, 0x6e, 0xcc,
+	0x82, 0x1a, 0x7d, 0x4b, 0xd1, 0xd3, 0xa1, 0xc5,
+	0x7e, 0x4f, 0xfc, 0x03, 0xdc, 0x08, 0x7b, 0xd2,
+	0xbb, 0x06, 0xa0, 0x60, 0xf4, 0xed, 0x26, 0x0f,
+};
+
+/** Factor to multiply the X coordinate with to convert from the Ed25519 to the legacy curve */
+static const uint32_t ed25519_to_legacy[32] = {
+	0x04, 0x97, 0xbd, 0x24, 0x50, 0xfb, 0x4b, 0xbf,
+	0x5e, 0x2a, 0xbc, 0x0d, 0x06, 0xc7, 0xce, 0xd7,
+	0xfe, 0xe8, 0xfa, 0x98, 0x64, 0x7e, 0x9e, 0x07,
+	0x56, 0xa4, 0xc1, 0x95, 0xdf, 0x98, 0xb4, 0x5b,
+};
 
 
 /** Adds two unpacked integers (modulo p) */
@@ -524,19 +554,17 @@ static void recip(uint32_t out[32], const uint32_t z[32]) {
 	/* 2^255 - 21 */ mult(out, t1, z11);
 }
 
-int ecc_25519_load_xy_legacy(ecc_25519_work_t *out, const ecc_int256_t *x, const ecc_int256_t *y) {
-	int i;
+/**
+ * Checks if the X and Y coordinates of a work structure represent a valid point of the curve
+ *
+ * Also fills out the T coordinate.
+ */
+static int check_load_xy(ecc_25519_work_t *val) {
 	uint32_t X2[32], Y2[32], aX2[32], dX2[32], dX2Y2[32], aX2_Y2[32], _1_dX2Y2[32], r[32];
 
-	for (i = 0; i < 32; i++) {
-		out->X[i] = x->p[i];
-		out->Y[i] = y->p[i];
-		out->Z[i] = (i == 0);
-	}
-
 	/* Check validity */
-	square(X2, out->X);
-	square(Y2, out->Y);
+	square(X2, val->X);
+	square(Y2, val->Y);
 	mult_int(aX2, UINT32_C(486664), X2);
 	mult_int(dX2, UINT32_C(486660), X2);
 	mult(dX2Y2, dX2, Y2);
@@ -548,15 +576,64 @@ int ecc_25519_load_xy_legacy(ecc_25519_work_t *out, const ecc_int256_t *x, const
 	if (!check_zero(r))
 	    return 0;
 
-	mult(out->T, out->X, out->Y);
+	mult(val->T, val->X, val->Y);
 
 	return 1;
+}
+
+int ecc_25519_load_xy_ed25519(ecc_25519_work_t *out, const ecc_int256_t *x, const ecc_int256_t *y) {
+	int i;
+	uint32_t tmp[32];
+
+	for (i = 0; i < 32; i++) {
+		tmp[i] = x->p[i];
+		out->Y[i] = y->p[i];
+		out->Z[i] = (i == 0);
+	}
+
+	mult(out->X, tmp, ed25519_to_legacy);
+
+	return check_load_xy(out);
+}
+
+int ecc_25519_load_xy_legacy(ecc_25519_work_t *out, const ecc_int256_t *x, const ecc_int256_t *y) {
+	int i;
+
+	for (i = 0; i < 32; i++) {
+		out->X[i] = x->p[i];
+		out->Y[i] = y->p[i];
+		out->Z[i] = (i == 0);
+	}
+
+	return check_load_xy(out);
 }
 
 int ecc_25519_load_xy(ecc_25519_work_t *out, const ecc_int256_t *x, const ecc_int256_t *y) {
 	return ecc_25519_load_xy_legacy(out, x, y);
 }
 
+
+void ecc_25519_store_xy_ed25519(ecc_int256_t *x, ecc_int256_t *y, const ecc_25519_work_t *in) {
+	uint32_t X[32], tmp[32], Y[32], Z[32];
+	int i;
+
+	recip(Z, in->Z);
+
+	if (x) {
+		mult(tmp, Z, in->X);
+		mult(X, tmp, legacy_to_ed25519);
+		freeze(X);
+		for (i = 0; i < 32; i++)
+			x->p[i] = X[i];
+	}
+
+	if (y) {
+		mult(Y, Z, in->Y);
+		freeze(Y);
+		for (i = 0; i < 32; i++)
+			y->p[i] = Y[i];
+	}
+}
 
 void ecc_25519_store_xy_legacy(ecc_int256_t *x, ecc_int256_t *y, const ecc_25519_work_t *in) {
 	uint32_t X[32], Y[32], Z[32];
@@ -583,6 +660,41 @@ void ecc_25519_store_xy(ecc_int256_t *x, ecc_int256_t *y, const ecc_25519_work_t
 	ecc_25519_store_xy_legacy(x, y, in);
 }
 
+
+int ecc_25519_load_packed_ed25519(ecc_25519_work_t *out, const ecc_int256_t *in) {
+	static const uint32_t a[32] = {UINT32_C(486664)};
+	int i;
+	uint32_t Y2[32] /* Y^2 */, dY2[32] /* dY^2 */, _1_Y2[32] /* 1-Y^2 */, a_dY2[32] /* a-dY^2 */, _1_a_dY2[32] /* 1/(a-dY^2) */;
+	uint32_t X2[32] /* X^2 */, X[32], Xt[32], X_ed25519[32];
+
+	for (i = 0; i < 32; i++) {
+		out->Y[i] = in->p[i];
+		out->Z[i] = (i == 0);
+	}
+
+	out->Y[31] &= 0x7f;
+
+	square(Y2, out->Y);
+	mult_int(dY2, UINT32_C(486660), Y2);
+	sub(_1_Y2, one, Y2);
+	sub(a_dY2, a, dY2);
+	recip(_1_a_dY2, a_dY2);
+	mult(X2, _1_Y2, _1_a_dY2);
+
+	if (!square_root(X, X2))
+		return 0;
+
+	mult(X_ed25519, X, legacy_to_ed25519);
+
+	/* No squeeze is necessary after subtractions from zero if the subtrahend is squeezed */
+	sub(Xt, zero, X);
+
+	select(out->X, X, Xt, (in->p[31] >> 7) ^ parity(X_ed25519));
+
+	mult(out->T, out->X, out->Y);
+
+	return 1;
+}
 
 int ecc_25519_load_packed_legacy(ecc_25519_work_t *out, const ecc_int256_t *in) {
 	int i;
@@ -621,6 +733,13 @@ int ecc_25519_load_packed(ecc_25519_work_t *out, const ecc_int256_t *in) {
 	return ecc_25519_load_packed_legacy(out, in);
 }
 
+
+void ecc_25519_store_packed_ed25519(ecc_int256_t *out, const ecc_25519_work_t *in) {
+	ecc_int256_t x;
+
+	ecc_25519_store_xy_ed25519(&x, out, in);
+	out->p[31] |= (x.p[0] << 7);
+}
 
 void ecc_25519_store_packed_legacy(ecc_int256_t *out, const ecc_25519_work_t *in) {
 	ecc_int256_t y;
