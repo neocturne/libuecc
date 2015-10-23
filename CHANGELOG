@@ -1,0 +1,15 @@
+libuecc v6 (in development)
+
+* Fixes a bug which might have caused a point's y coordinate to be negated
+    in certain circumstances when the point was stored in packed
+    representation and loaded again. It is extremely improbable that this
+    has ever actually happened, as only a small range of coordinates was
+    affected.
+* Use stdint types to clarify ABI and add support for systems with
+    sizeof(int) < 4 (this is not an ABI break in practise as all systems on
+    which libuecc has been used in the past should have int == int32_t)
+* Add point negation and subtraction functions
+* Rename all point access functions to bear a _legacy suffix (the old names
+    are still available, but marked as deprecated)
+* Add new point access functions and a new generator point that are
+    compatible with Ed25519
