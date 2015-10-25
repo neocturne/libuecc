@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 2.6)
 project(LIBUECC C)
-set(PROJECT_VERSION 5)
+set(PROJECT_VERSION 6)
 
 set(CMAKE_MODULE_PATH ${LIBUECC_SOURCE_DIR})
 

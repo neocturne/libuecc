@@ -1,4 +1,4 @@
-libuecc v6 (in development)
+libuecc v6 (2015/10/25)
 
 * Fixes a bug which might have caused a point's y coordinate to be negated
     in certain circumstances when the point was stored in packed
