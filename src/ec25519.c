@@ -842,6 +842,38 @@ void ecc_25519_add(ecc_25519_work_t *out, const ecc_25519_work_t *in1, const ecc
 	mult(out->Z, F, G);
 }
 
+/** Adds two points of the Elliptic Curve, assuming that in2->Z == 1 */
+static void ecc_25519_add1(ecc_25519_work_t *out, const ecc_25519_work_t *in1, const ecc_25519_work_t *in2) {
+	const uint32_t j = UINT32_C(60833);
+	const uint32_t k = UINT32_C(121665);
+	uint32_t A[32], B[32], C[32], D[32], E[32], F[32], G[32], H[32], t0[32], t1[32];
+
+	sub(t0, in1->Y, in1->X);
+	mult_int(t1, j, t0);
+	sub(t0, in2->Y, in2->X);
+	mult(A, t0, t1);
+
+	add(t0, in1->Y, in1->X);
+	mult_int(t1, j, t0);
+	add(t0, in2->Y, in2->X);
+	mult(B, t0, t1);
+
+	mult_int(t0, k, in2->T);
+	mult(C, in1->T, t0);
+
+	mult_int(D, 2*j, in1->Z);
+
+	sub(E, B, A);
+	add(F, D, C);
+	sub(G, D, C);
+	add(H, B, A);
+
+	mult(out->X, E, F);
+	mult(out->Y, G, H);
+	mult(out->T, E, H);
+	mult(out->Z, F, G);
+}
+
 void ecc_25519_sub(ecc_25519_work_t *out, const ecc_25519_work_t *in1, const ecc_25519_work_t *in2) {
 	ecc_25519_work_t in2_neg;
 
@@ -874,9 +906,25 @@ void ecc_25519_scalarmult(ecc_25519_work_t *out, const ecc_int256_t *n, const ec
 }
 
 void ecc_25519_scalarmult_base_bits(ecc_25519_work_t *out, const ecc_int256_t *n, unsigned bits) {
-	ecc_25519_scalarmult_bits(out, n, &ecc_25519_work_default_base, bits);
+	ecc_25519_work_t Q2, Q2p;
+	ecc_25519_work_t cur = ecc_25519_work_identity;
+	int b, pos;
+
+	if (bits > 256)
+		bits = 256;
+
+	for (pos = bits - 1; pos >= 0; --pos) {
+		b = n->p[pos / 8] >> (pos & 7);
+		b &= 1;
+
+		ecc_25519_double(&Q2, &cur);
+		ecc_25519_add1(&Q2p, &Q2, &ecc_25519_work_default_base);
+		selectw(&cur, &Q2, &Q2p, b);
+	}
+
+	*out = cur;
 }
 
 void ecc_25519_scalarmult_base(ecc_25519_work_t *out, const ecc_int256_t *n) {
-	ecc_25519_scalarmult(out, n, &ecc_25519_work_default_base);
+	ecc_25519_scalarmult_base_bits(out, n, 256);
 }
