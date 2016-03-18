@@ -41,7 +41,7 @@
  * which is the curve used by the Ed25519 algorithm. The functions for this curve
  * have the suffix \em ed25519.
  *
- * Internally, libuecc always uses the former representation for its \em work structure.
+ * Internally, libuecc always uses the latter representation for its \em work structure.
  *
  * The curves are equivalent to the Montgomery Curve used in D. J. Bernstein's
  * Curve25519 Diffie-Hellman algorithm.
@@ -62,57 +62,72 @@
 const ecc_25519_work_t ecc_25519_work_identity = {{0}, {1}, {1}, {0}};
 
 const ecc_25519_work_t ecc_25519_work_base_legacy = {
-	{0xd4, 0x6b, 0xfe, 0x7f, 0x39, 0xfa, 0x8c, 0x22,
-	 0xe1, 0x96, 0x23, 0xeb, 0x26, 0xb7, 0x8e, 0x6a,
-	 0x34, 0x74, 0x8b, 0x66, 0xd6, 0xa3, 0x26, 0xdd,
-	 0x19, 0x5e, 0x9f, 0x21, 0x50, 0x43, 0x7c, 0x54},
+	{0x1a, 0xd5, 0x25, 0x8f, 0x60, 0x2d, 0x56, 0xc9,
+	 0xb2, 0xa7, 0x25, 0x95, 0x60, 0xc7, 0x2c, 0x69,
+	 0x5c, 0xdc, 0xd6, 0xfd, 0x31, 0xe2, 0xa4, 0xc0,
+	 0xfe, 0x53, 0x6e, 0xcd, 0xd3, 0x36, 0x69, 0x21},
 	{0x58, 0x66, 0x66, 0x66, 0x66, 0x66, 0x66, 0x66,
 	 0x66, 0x66, 0x66, 0x66, 0x66, 0x66, 0x66, 0x66,
 	 0x66, 0x66, 0x66, 0x66, 0x66, 0x66, 0x66, 0x66,
 	 0x66, 0x66, 0x66, 0x66, 0x66, 0x66, 0x66, 0x66},
 	{1},
-	{0x47, 0x56, 0x98, 0x99, 0xc7, 0x61, 0x0a, 0x82,
-	 0x1a, 0xdf, 0x82, 0x22, 0x1f, 0x2c, 0x72, 0x88,
-	 0xc3, 0x29, 0x09, 0x52, 0x78, 0xe9, 0x1e, 0xe4,
-	 0x47, 0x4b, 0x4c, 0x81, 0xa6, 0x02, 0xfd, 0x29}
+	{0xa3, 0xdd, 0xb7, 0xa5, 0xb3, 0x8a, 0xde, 0x6d,
+	 0xf5, 0x52, 0x51, 0x77, 0x80, 0x9f, 0xf0, 0x20,
+	 0x7d, 0xe3, 0xab, 0x64, 0x8e, 0x4e, 0xea, 0x66,
+	 0x65, 0x76, 0x8b, 0xd7, 0x0f, 0x5f, 0x87, 0x67},
 };
 
 const ecc_25519_work_t ecc_25519_work_default_base = {
-	{0xd4, 0x6b, 0xfe, 0x7f, 0x39, 0xfa, 0x8c, 0x22,
-	 0xe1, 0x96, 0x23, 0xeb, 0x26, 0xb7, 0x8e, 0x6a,
-	 0x34, 0x74, 0x8b, 0x66, 0xd6, 0xa3, 0x26, 0xdd,
-	 0x19, 0x5e, 0x9f, 0x21, 0x50, 0x43, 0x7c, 0x54},
+	{0x1a, 0xd5, 0x25, 0x8f, 0x60, 0x2d, 0x56, 0xc9,
+	 0xb2, 0xa7, 0x25, 0x95, 0x60, 0xc7, 0x2c, 0x69,
+	 0x5c, 0xdc, 0xd6, 0xfd, 0x31, 0xe2, 0xa4, 0xc0,
+	 0xfe, 0x53, 0x6e, 0xcd, 0xd3, 0x36, 0x69, 0x21},
 	{0x58, 0x66, 0x66, 0x66, 0x66, 0x66, 0x66, 0x66,
 	 0x66, 0x66, 0x66, 0x66, 0x66, 0x66, 0x66, 0x66,
 	 0x66, 0x66, 0x66, 0x66, 0x66, 0x66, 0x66, 0x66,
 	 0x66, 0x66, 0x66, 0x66, 0x66, 0x66, 0x66, 0x66},
 	{1},
-	{0x47, 0x56, 0x98, 0x99, 0xc7, 0x61, 0x0a, 0x82,
-	 0x1a, 0xdf, 0x82, 0x22, 0x1f, 0x2c, 0x72, 0x88,
-	 0xc3, 0x29, 0x09, 0x52, 0x78, 0xe9, 0x1e, 0xe4,
-	 0x47, 0x4b, 0x4c, 0x81, 0xa6, 0x02, 0xfd, 0x29}
+	{0xa3, 0xdd, 0xb7, 0xa5, 0xb3, 0x8a, 0xde, 0x6d,
+	 0xf5, 0x52, 0x51, 0x77, 0x80, 0x9f, 0xf0, 0x20,
+	 0x7d, 0xe3, 0xab, 0x64, 0x8e, 0x4e, 0xea, 0x66,
+	 0x65, 0x76, 0x8b, 0xd7, 0x0f, 0x5f, 0x87, 0x67},
 };
 
 
 const ecc_25519_work_t ecc_25519_work_base_ed25519 = {
-	{0xd4, 0x6b, 0xfe, 0x7f, 0x39, 0xfa, 0x8c, 0x22,
-	 0xe1, 0x96, 0x23, 0xeb, 0x26, 0xb7, 0x8e, 0x6a,
-	 0x34, 0x74, 0x8b, 0x66, 0xd6, 0xa3, 0x26, 0xdd,
-	 0x19, 0x5e, 0x9f, 0x21, 0x50, 0x43, 0x7c, 0x54},
+	{0x1a, 0xd5, 0x25, 0x8f, 0x60, 0x2d, 0x56, 0xc9,
+	 0xb2, 0xa7, 0x25, 0x95, 0x60, 0xc7, 0x2c, 0x69,
+	 0x5c, 0xdc, 0xd6, 0xfd, 0x31, 0xe2, 0xa4, 0xc0,
+	 0xfe, 0x53, 0x6e, 0xcd, 0xd3, 0x36, 0x69, 0x21},
 	{0x58, 0x66, 0x66, 0x66, 0x66, 0x66, 0x66, 0x66,
 	 0x66, 0x66, 0x66, 0x66, 0x66, 0x66, 0x66, 0x66,
 	 0x66, 0x66, 0x66, 0x66, 0x66, 0x66, 0x66, 0x66,
 	 0x66, 0x66, 0x66, 0x66, 0x66, 0x66, 0x66, 0x66},
 	{1},
-	{0x47, 0x56, 0x98, 0x99, 0xc7, 0x61, 0x0a, 0x82,
-	 0x1a, 0xdf, 0x82, 0x22, 0x1f, 0x2c, 0x72, 0x88,
-	 0xc3, 0x29, 0x09, 0x52, 0x78, 0xe9, 0x1e, 0xe4,
-	 0x47, 0x4b, 0x4c, 0x81, 0xa6, 0x02, 0xfd, 0x29}
+	{0xa3, 0xdd, 0xb7, 0xa5, 0xb3, 0x8a, 0xde, 0x6d,
+	 0xf5, 0x52, 0x51, 0x77, 0x80, 0x9f, 0xf0, 0x20,
+	 0x7d, 0xe3, 0xab, 0x64, 0x8e, 0x4e, 0xea, 0x66,
+	 0x65, 0x76, 0x8b, 0xd7, 0x0f, 0x5f, 0x87, 0x67},
 };
 
 
 static const uint32_t zero[32] = {0};
 static const uint32_t one[32] = {1};
+
+static const uint32_t minus1[32] = {
+	0xec, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x7f,
+};
+
+/** Ed25519 parameter -(121665/121666) */
+static const uint32_t d[32] = {
+	0xa3, 0x78, 0x59, 0x13, 0xca, 0x4d, 0xeb, 0x75,
+	0xab, 0xd8, 0x41, 0x41, 0x4d, 0x0a, 0x70, 0x00,
+	0x98, 0xe8, 0x79, 0x77, 0x79, 0x40, 0xc7, 0x8c,
+	0x73, 0xfe, 0x6f, 0x2b, 0xee, 0x6c, 0x03, 0x52,
+};
 
 
 /** Factor to multiply the X coordinate with to convert from the legacy to the Ed25519 curve */
@@ -233,7 +248,7 @@ static void freeze(uint32_t a[32]) {
  *
  * The input must be \em squeezed.
  */
-static int parity(uint32_t a[32]) {
+static int parity(const uint32_t a[32]) {
 	uint32_t b[32];
 
 	add(b, a, minusp);
@@ -395,13 +410,6 @@ static void select(uint32_t out[32], const uint32_t r[32], const uint32_t s[32],
  * If the given integer has no square root, 0 is returned, 1 otherwise.
  */
 static int square_root(uint32_t out[32], const uint32_t z[32]) {
-	static const uint32_t minus1[32] = {
-		0xec, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
-		0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
-		0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
-		0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x7f
-	};
-
 	static const uint32_t rho_s[32] = {
 		0xb0, 0xa0, 0x0e, 0x4a, 0x27, 0x1b, 0xee, 0xc4,
 		0x78, 0xe4, 0x2f, 0xad, 0x06, 0x18, 0x43, 0x2f,
@@ -557,20 +565,22 @@ static void recip(uint32_t out[32], const uint32_t z[32]) {
 /**
  * Checks if the X and Y coordinates of a work structure represent a valid point of the curve
  *
- * Also fills out the T coordinate.
+ * Also fills in the T coordinate.
  */
 static int check_load_xy(ecc_25519_work_t *val) {
-	uint32_t X2[32], Y2[32], aX2[32], dX2[32], dX2Y2[32], aX2_Y2[32], _1_dX2Y2[32], r[32];
+	uint32_t X2[32], Y2[32], dX2[32], dX2Y2[32], Y2_X2[32], Y2_X2_1[32], r[32];
 
 	/* Check validity */
 	square(X2, val->X);
 	square(Y2, val->Y);
-	mult_int(aX2, UINT32_C(486664), X2);
-	mult_int(dX2, UINT32_C(486660), X2);
+
+	mult(dX2, d, X2);
 	mult(dX2Y2, dX2, Y2);
-	add(aX2_Y2, aX2, Y2);
-	add(_1_dX2Y2, one, dX2Y2);
-	sub(r, aX2_Y2, _1_dX2Y2);
+
+	sub(Y2_X2, Y2, X2);
+	sub(Y2_X2_1, Y2_X2, one);
+
+	sub(r, Y2_X2_1, dX2Y2);
 	squeeze(r);
 
 	if (!check_zero(r))
@@ -583,21 +593,6 @@ static int check_load_xy(ecc_25519_work_t *val) {
 
 int ecc_25519_load_xy_ed25519(ecc_25519_work_t *out, const ecc_int256_t *x, const ecc_int256_t *y) {
 	int i;
-	uint32_t tmp[32];
-
-	for (i = 0; i < 32; i++) {
-		tmp[i] = x->p[i];
-		out->Y[i] = y->p[i];
-		out->Z[i] = (i == 0);
-	}
-
-	mult(out->X, tmp, ed25519_to_legacy);
-
-	return check_load_xy(out);
-}
-
-int ecc_25519_load_xy_legacy(ecc_25519_work_t *out, const ecc_int256_t *x, const ecc_int256_t *y) {
-	int i;
 
 	for (i = 0; i < 32; i++) {
 		out->X[i] = x->p[i];
@@ -608,34 +603,27 @@ int ecc_25519_load_xy_legacy(ecc_25519_work_t *out, const ecc_int256_t *x, const
 	return check_load_xy(out);
 }
 
+int ecc_25519_load_xy_legacy(ecc_25519_work_t *out, const ecc_int256_t *x, const ecc_int256_t *y) {
+	int i;
+	uint32_t tmp[32];
+
+	for (i = 0; i < 32; i++) {
+		tmp[i] = x->p[i];
+		out->Y[i] = y->p[i];
+		out->Z[i] = (i == 0);
+	}
+
+	mult(out->X, tmp, legacy_to_ed25519);
+
+	return check_load_xy(out);
+}
+
 int ecc_25519_load_xy(ecc_25519_work_t *out, const ecc_int256_t *x, const ecc_int256_t *y) {
 	return ecc_25519_load_xy_legacy(out, x, y);
 }
 
 
 void ecc_25519_store_xy_ed25519(ecc_int256_t *x, ecc_int256_t *y, const ecc_25519_work_t *in) {
-	uint32_t X[32], tmp[32], Y[32], Z[32];
-	int i;
-
-	recip(Z, in->Z);
-
-	if (x) {
-		mult(tmp, Z, in->X);
-		mult(X, tmp, legacy_to_ed25519);
-		freeze(X);
-		for (i = 0; i < 32; i++)
-			x->p[i] = X[i];
-	}
-
-	if (y) {
-		mult(Y, Z, in->Y);
-		freeze(Y);
-		for (i = 0; i < 32; i++)
-			y->p[i] = Y[i];
-	}
-}
-
-void ecc_25519_store_xy_legacy(ecc_int256_t *x, ecc_int256_t *y, const ecc_25519_work_t *in) {
 	uint32_t X[32], Y[32], Z[32];
 	int i;
 
@@ -656,16 +644,37 @@ void ecc_25519_store_xy_legacy(ecc_int256_t *x, ecc_int256_t *y, const ecc_25519
 	}
 }
 
+void ecc_25519_store_xy_legacy(ecc_int256_t *x, ecc_int256_t *y, const ecc_25519_work_t *in) {
+	uint32_t X[32], tmp[32], Y[32], Z[32];
+	int i;
+
+	recip(Z, in->Z);
+
+	if (x) {
+		mult(tmp, Z, in->X);
+		mult(X, tmp, ed25519_to_legacy);
+		freeze(X);
+		for (i = 0; i < 32; i++)
+			x->p[i] = X[i];
+	}
+
+	if (y) {
+		mult(Y, Z, in->Y);
+		freeze(Y);
+		for (i = 0; i < 32; i++)
+			y->p[i] = Y[i];
+	}
+}
+
 void ecc_25519_store_xy(ecc_int256_t *x, ecc_int256_t *y, const ecc_25519_work_t *in) {
 	ecc_25519_store_xy_legacy(x, y, in);
 }
 
 
 int ecc_25519_load_packed_ed25519(ecc_25519_work_t *out, const ecc_int256_t *in) {
-	static const uint32_t a[32] = {UINT32_C(486664)};
 	int i;
-	uint32_t Y2[32] /* Y^2 */, dY2[32] /* dY^2 */, _1_Y2[32] /* 1-Y^2 */, a_dY2[32] /* a-dY^2 */, _1_a_dY2[32] /* 1/(a-dY^2) */;
-	uint32_t X2[32] /* X^2 */, X[32], Xt[32], X_ed25519[32];
+	uint32_t Y2[32] /* Y^2 */, dY2[32] /* dY^2 */, Y2_1[32] /* Y^2-1 */, dY2_1[32] /* dY^2+1 */, _1_dY2_1[32] /* 1/(dY^2+1) */;
+	uint32_t X2[32] /* X^2 */, X[32], Xt[32];
 
 	for (i = 0; i < 32; i++) {
 		out->Y[i] = in->p[i];
@@ -675,21 +684,19 @@ int ecc_25519_load_packed_ed25519(ecc_25519_work_t *out, const ecc_int256_t *in)
 	out->Y[31] &= 0x7f;
 
 	square(Y2, out->Y);
-	mult_int(dY2, UINT32_C(486660), Y2);
-	sub(_1_Y2, one, Y2);
-	sub(a_dY2, a, dY2);
-	recip(_1_a_dY2, a_dY2);
-	mult(X2, _1_Y2, _1_a_dY2);
+	mult(dY2, d, Y2);
+	sub(Y2_1, Y2, one);
+	add(dY2_1, dY2, one);
+	recip(_1_dY2_1, dY2_1);
+	mult(X2, Y2_1, _1_dY2_1);
 
 	if (!square_root(X, X2))
 		return 0;
 
-	mult(X_ed25519, X, legacy_to_ed25519);
-
 	/* No squeeze is necessary after subtractions from zero if the subtrahend is squeezed */
 	sub(Xt, zero, X);
 
-	select(out->X, X, Xt, (in->p[31] >> 7) ^ parity(X_ed25519));
+	select(out->X, X, Xt, (in->p[31] >> 7) ^ parity(X));
 
 	mult(out->T, out->X, out->Y);
 
@@ -699,16 +706,16 @@ int ecc_25519_load_packed_ed25519(ecc_25519_work_t *out, const ecc_int256_t *in)
 int ecc_25519_load_packed_legacy(ecc_25519_work_t *out, const ecc_int256_t *in) {
 	int i;
 	uint32_t X2[32] /* X^2 */, aX2[32] /* aX^2 */, dX2[32] /* dX^2 */, _1_aX2[32] /* 1-aX^2 */, _1_dX2[32] /* 1-aX^2 */;
-	uint32_t _1_1_dX2[32]  /* 1/(1-aX^2) */, Y2[32] /* Y^2 */, Y[32], Yt[32];
+	uint32_t _1_1_dX2[32]  /* 1/(1-aX^2) */, Y2[32] /* Y^2 */, Y[32], Yt[32], X_legacy[32];
 
 	for (i = 0; i < 32; i++) {
-		out->X[i] = in->p[i];
+		X_legacy[i] = in->p[i];
 		out->Z[i] = (i == 0);
 	}
 
-	out->X[31] &= 0x7f;
+	X_legacy[31] &= 0x7f;
 
-	square(X2, out->X);
+	square(X2, X_legacy);
 	mult_int(aX2, UINT32_C(486664), X2);
 	mult_int(dX2, UINT32_C(486660), X2);
 	sub(_1_aX2, one, aX2);
@@ -724,6 +731,7 @@ int ecc_25519_load_packed_legacy(ecc_25519_work_t *out, const ecc_int256_t *in) 
 
 	select(out->Y, Y, Yt, (in->p[31] >> 7) ^ parity(Y));
 
+	mult(out->X, X_legacy, legacy_to_ed25519);
 	mult(out->T, out->X, out->Y);
 
 	return 1;
@@ -776,20 +784,26 @@ void ecc_25519_negate(ecc_25519_work_t *out, const ecc_25519_work_t *in) {
 }
 
 void ecc_25519_double(ecc_25519_work_t *out, const ecc_25519_work_t *in) {
-	uint32_t A[32], B[32], C[32], D[32], E[32], F[32], G[32], H[32], t0[32], t1[32], t2[32], t3[32];
+	uint32_t A[32], B[32], C[32], D[32], E[32], F[32], G[32], H[32], t0[32], t1[32];
 
 	square(A, in->X);
+
 	square(B, in->Y);
+
 	square(t0, in->Z);
 	mult_int(C, 2, t0);
-	mult_int(D, UINT32_C(486664), A);
-	add(t1, in->X, in->Y);
-	square(t2, t1);
-	sub(t3, t2, A);
-	sub(E, t3, B);
+
+	sub(D, zero, A);
+
+	add(t0, in->X, in->Y);
+	square(t1, t0);
+	sub(t0, t1, A);
+	sub(E, t0, B);
+
 	add(G, D, B);
 	sub(F, G, C);
 	sub(H, D, B);
+
 	mult(out->X, E, F);
 	mult(out->Y, G, H);
 	mult(out->T, E, H);
@@ -797,22 +811,31 @@ void ecc_25519_double(ecc_25519_work_t *out, const ecc_25519_work_t *in) {
 }
 
 void ecc_25519_add(ecc_25519_work_t *out, const ecc_25519_work_t *in1, const ecc_25519_work_t *in2) {
-	uint32_t A[32], B[32], C[32], D[32], E[32], F[32], G[32], H[32], t0[32], t1[32], t2[32], t3[32], t4[32], t5[32];
+	const uint32_t j = UINT32_C(60833);
+	const uint32_t k = UINT32_C(121665);
+	uint32_t A[32], B[32], C[32], D[32], E[32], F[32], G[32], H[32], t0[32], t1[32];
 
-	mult(A, in1->X, in2->X);
-	mult(B, in1->Y, in2->Y);
-	mult_int(t0, UINT32_C(486660), in2->T);
+	sub(t0, in1->Y, in1->X);
+	mult_int(t1, j, t0);
+	sub(t0, in2->Y, in2->X);
+	mult(A, t0, t1);
+
+	add(t0, in1->Y, in1->X);
+	mult_int(t1, j, t0);
+	add(t0, in2->Y, in2->X);
+	mult(B, t0, t1);
+
+	mult_int(t0, k, in2->T);
 	mult(C, in1->T, t0);
-	mult(D, in1->Z, in2->Z);
-	add(t1, in1->X, in1->Y);
-	add(t2, in2->X, in2->Y);
-	mult(t3, t1, t2);
-	sub(t4, t3, A);
-	sub(E, t4, B);
-	sub(F, D, C);
-	add(G, D, C);
-	mult_int(t5, UINT32_C(486664), A);
-	sub(H, B, t5);
+
+	mult_int(t0, 2*j, in2->Z);
+	mult(D, in1->Z, t0);
+
+	sub(E, B, A);
+	add(F, D, C);
+	sub(G, D, C);
+	add(H, B, A);
+
 	mult(out->X, E, F);
 	mult(out->Y, G, H);
 	mult(out->T, E, H);
