@@ -68,33 +68,27 @@ extern const ecc_25519_work_t ecc_25519_work_identity;
 
 
 /**
- * The generator point used by Ed25519
+ * The Ed25519 default generator point
  *
- * \ref ecc_25519_work_base_ed25519 is the inverse of \ref ecc_25519_work_base_legacy
+ * \deprecated Use the equivalent \ref ecc_25519_work_default_base instead.
  *
- * The order of the base point is \f$ 2^{252} + 27742317777372353535851937790883648493 \f$.
  **/
-extern const ecc_25519_work_t ecc_25519_work_base_ed25519;
+DEPRECATED extern const ecc_25519_work_t ecc_25519_work_base_ed25519;
 
 /**
- * The ec25519 legacy generator point ("default base" till libuecc v5)
+ * The Ed25519 default generator point
  *
- * In new software that doesn't need compablity with older libuecc releases, you should consider
- * using \ref ecc_25519_work_base_ed25519 instead.
- *
- * \ref ecc_25519_work_base_legacy is the inverse of \ref ecc_25519_work_base_ed25519
+ * \deprecated Use the equivalent \ref ecc_25519_work_default_base instead.
+ */
+DEPRECATED extern const ecc_25519_work_t ecc_25519_work_base_legacy;
+
+
+/**
+ * The Ed25519 default generator point
  *
  * The order of the base point is \f$ 2^{252} + 27742317777372353535851937790883648493 \f$.
  */
-extern const ecc_25519_work_t ecc_25519_work_base_legacy;
-
-
-/**
- * The ec25519 legacy generator point (provided for API/ABI compatiblity with older releases of libuecc)
- *
- * \deprecated Use \ref ecc_25519_work_base_legacy instead.
- */
-DEPRECATED extern const ecc_25519_work_t ecc_25519_work_default_base;
+extern const ecc_25519_work_t ecc_25519_work_default_base;
 
 
 /** Loads a point of the Ed25519 curve with given coordinates into its unpacked representation */
@@ -256,19 +250,15 @@ void ecc_25519_scalarmult(ecc_25519_work_t *out, const ecc_int256_t *n, const ec
  * The order of the base point is \f$ 2^{252} + 27742317777372353535851937790883648493 \f$.
  *
  * See the notes about \ref ecc_25519_scalarmult_bits before using this function.
- *
- * \deprecated Use \ref ecc_25519_scalarmult_bits and explicitly specify the base point.
  */
-DEPRECATED void ecc_25519_scalarmult_base_bits(ecc_25519_work_t *out, const ecc_int256_t *n, unsigned bits);
+void ecc_25519_scalarmult_base_bits(ecc_25519_work_t *out, const ecc_int256_t *n, unsigned bits);
 
 /**
  * Does a scalar multiplication of the default base point (generator element) of the Elliptic Curve with an integer
  *
  * The order of the base point is \f$ 2^{252} + 27742317777372353535851937790883648493 \f$.
- *
- * \deprecated Use \ref ecc_25519_scalarmult and explicitly specify the base point.
  */
-DEPRECATED void ecc_25519_scalarmult_base(ecc_25519_work_t *out, const ecc_int256_t *n);
+void ecc_25519_scalarmult_base(ecc_25519_work_t *out, const ecc_int256_t *n);
 
 /**@}*/
 

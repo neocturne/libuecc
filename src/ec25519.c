@@ -851,9 +851,9 @@ void ecc_25519_scalarmult(ecc_25519_work_t *out, const ecc_int256_t *n, const ec
 }
 
 void ecc_25519_scalarmult_base_bits(ecc_25519_work_t *out, const ecc_int256_t *n, unsigned bits) {
-	ecc_25519_scalarmult_bits(out, n, &ecc_25519_work_base_legacy, bits);
+	ecc_25519_scalarmult_bits(out, n, &ecc_25519_work_default_base, bits);
 }
 
 void ecc_25519_scalarmult_base(ecc_25519_work_t *out, const ecc_int256_t *n) {
-	ecc_25519_scalarmult(out, n, &ecc_25519_work_base_legacy);
+	ecc_25519_scalarmult(out, n, &ecc_25519_work_default_base);
 }
