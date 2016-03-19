@@ -249,6 +249,8 @@ void ecc_25519_scalarmult(ecc_25519_work_t *out, const ecc_int256_t *n, const ec
  *
  * The order of the base point is \f$ 2^{252} + 27742317777372353535851937790883648493 \f$.
  *
+ * ecc_25519_scalarmult_base_bits(out, n, bits) is faster than ecc_25519_scalarmult_bits(out, n, &ecc_25519_work_default_base, bits).
+ *
  * See the notes about \ref ecc_25519_scalarmult_bits before using this function.
  */
 void ecc_25519_scalarmult_base_bits(ecc_25519_work_t *out, const ecc_int256_t *n, unsigned bits);
@@ -257,6 +259,8 @@ void ecc_25519_scalarmult_base_bits(ecc_25519_work_t *out, const ecc_int256_t *n
  * Does a scalar multiplication of the default base point (generator element) of the Elliptic Curve with an integer
  *
  * The order of the base point is \f$ 2^{252} + 27742317777372353535851937790883648493 \f$.
+ *
+ * ecc_25519_scalarmult_base(out, n) is faster than ecc_25519_scalarmult(out, n, &ecc_25519_work_default_base).
  */
 void ecc_25519_scalarmult_base(ecc_25519_work_t *out, const ecc_int256_t *n);
 
