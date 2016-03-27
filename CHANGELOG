@@ -1,4 +1,4 @@
-libuecc v7 (unreleased)
+libuecc v7 (2016/03/27)
 
 * Change conversion between Ed25519 and legacy representation. This should
     not affect any operations unless Ed25519 and legacy load/store
